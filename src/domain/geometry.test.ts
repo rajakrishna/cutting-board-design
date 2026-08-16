@@ -1,8 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDefaultBoard } from './defaults';
 import { computeSliceCount, stopBlock } from './geometry';
 import { computeCutSummary, formatInches } from './cutList';
 import { buildGuide } from './guide';
+import { randomizeBoard } from './randomize';
+import { PRESETS } from '../data/templates';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('domain engine', () => {
   it('bakes flatten into stop block', () => {
@@ -34,5 +40,15 @@ describe('domain engine', () => {
   it('formats fractions', () => {
     expect(formatInches(1.5)).toBe('1 1/2"');
     expect(formatInches(0.125)).toBe('1/8"');
+  });
+
+  it('does not randomize to an offset-row pattern', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const brick = PRESETS.find((preset) => preset.id === 'brick')!;
+    const stripes = PRESETS.find((preset) => preset.id === 'stripes')!;
+
+    const board = randomizeBoard(createDefaultBoard(), [brick, stripes]);
+
+    expect(board.settings.rowOffset).toBe(0);
   });
 });

@@ -8,6 +8,13 @@ import { SIZE_CHIPS } from '../../domain/defaults'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 
 export function BoardPreview() {
@@ -122,22 +129,24 @@ export function BoardPreview() {
         <Separator orientation="vertical" className="h-5" />
 
         {/* Size presets */}
-        <ToggleGroup
-          type="single"
-          value={sizeId ?? ''}
+        <Select
+          value={sizeId}
           onValueChange={(v) => {
             const c = SIZE_CHIPS.find((x) => x.id === v)
             if (c) applySize(c.length, c.width, c.thickness)
           }}
-          variant="outline"
-          size="sm"
         >
-          {SIZE_CHIPS.map((c) => (
-            <ToggleGroupItem key={c.id} value={c.id} className="text-xs">
-              {c.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+          <SelectTrigger size="sm" className="w-28 text-xs">
+            <SelectValue placeholder="Sizes" />
+          </SelectTrigger>
+          <SelectContent>
+            {SIZE_CHIPS.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {/* Dimensions */}
         <div className="flex items-center gap-2">
@@ -233,8 +242,8 @@ function DimensionField({
   step?: number
 }) {
   return (
-    <InputGroup className="h-8 w-20">
-      <InputGroupAddon align="inline-start" className="px-2 text-xs text-muted-foreground">
+    <InputGroup className="h-8 w-24">
+      <InputGroupAddon align="inline-start" className="px-1.5 text-xs text-muted-foreground">
         {label}
       </InputGroupAddon>
       <InputGroupInput
@@ -244,7 +253,7 @@ function DimensionField({
         onChange={(e) => onChange(Number(e.target.value))}
         className="h-8 px-0 text-center text-xs tabular-nums"
       />
-      <InputGroupAddon align="inline-end" className="px-2 text-xs text-muted-foreground">
+      <InputGroupAddon align="inline-end" className="px-1.5 text-xs text-muted-foreground">
         &quot;
       </InputGroupAddon>
     </InputGroup>

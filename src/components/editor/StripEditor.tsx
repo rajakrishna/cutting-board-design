@@ -1,5 +1,5 @@
 import { useBoardStore } from '../../state/boardStore'
-import { getWood, WOODS } from '../../domain/woods'
+import { WOODS } from '../../domain/woods'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -39,7 +39,6 @@ export function StripEditor() {
 
       <div className="flex flex-col gap-2">
         {board.strips.map((s, i) => {
-          const wood = getWood(s.woodId)
           const isSelected = selectedStripId === s.id
 
           return (
@@ -56,11 +55,6 @@ export function StripEditor() {
               <span className="w-4 text-center text-xs tabular-nums text-muted-foreground">
                 {i + 1}
               </span>
-
-              <span
-                className="size-4 shrink-0 rounded-sm border border-border"
-                style={{ backgroundColor: wood?.color ?? '#94a3b8' }}
-              />
 
               <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
                 <Select
@@ -108,7 +102,7 @@ export function StripEditor() {
                   step={0.125}
                   min={0.25}
                   max={8}
-                  className="h-8 w-14 px-1 text-center text-xs tabular-nums"
+                  className="h-8 w-20 px-1 text-center text-xs tabular-nums"
                 />
                 <span className="text-xs text-muted-foreground">"</span>
               </div>

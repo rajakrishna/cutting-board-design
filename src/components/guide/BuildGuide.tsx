@@ -26,7 +26,7 @@ function BoardMiniPreview() {
   const totalWidth = board.strips.reduce((a, s) => a + s.width, 0)
 
   return (
-    <div className="rounded-md border border-border bg-muted/30 p-4">
+    <div className="rounded-lg border border-border bg-muted p-4">
       <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
         Board Preview
       </div>
@@ -39,7 +39,7 @@ function BoardMiniPreview() {
               key={`mini-${s.id}-${i}`}
               className="h-full"
               style={{
-                background: wood?.color ?? '#ccc',
+                background: wood?.color ?? '#94a3b8',
                 width: `${widthPercent}%`,
               }}
               title={`${wood?.name}: ${s.width}"`}
@@ -105,8 +105,7 @@ export function BuildGuide() {
         </div>
 
         <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-4 p-4">
-            {/* Board preview at top for steps 2+ */}
+          <div className="flex flex-col gap-4 p-4">
             {guideStep > 0 && <BoardMiniPreview />}
 
             <div>
@@ -114,7 +113,7 @@ export function BuildGuide() {
                 Step {guideStep + 1} of {guide.length}
               </div>
               <h2 className="mt-1 text-xl font-semibold">{step.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/90">{step.caption}</p>
+              <p className="mt-2 text-sm leading-relaxed text-foreground">{step.caption}</p>
             </div>
 
             {/* Compact measurements - inline for step 1 */}
@@ -156,16 +155,16 @@ export function BuildGuide() {
 
             {/* Compact tools - inline checkboxes */}
             {step.tools.length > 0 && (
-              <div className="rounded-md border border-border p-3">
+              <div className="rounded-lg border border-border p-3">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Tools this step
                 </h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
                   {step.tools.map((t) => {
                     const hasDetails = t.or || t.never
                     return (
-                      <span key={t.need} className="inline-flex items-center gap-1.5">
-                        <Checkbox checked disabled className="pointer-events-none size-3.5" />
+                      <span key={t.need} className="inline-flex min-h-8 items-center gap-2">
+                        <Checkbox checked disabled className="pointer-events-none" />
                         <span className="text-sm">{t.need}</span>
                         {hasDetails && (
                           <Tooltip>
@@ -174,9 +173,10 @@ export function BuildGuide() {
                                 type="button"
                                 variant="ghost"
                                 size="icon-xs"
-                                className="h-4 w-4 text-muted-foreground"
+                                className="text-muted-foreground"
+                                aria-label={`Details for ${t.need}`}
                               >
-                                <Info className="size-3" />
+                                <Info className="size-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-[200px]">

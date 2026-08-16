@@ -1,11 +1,14 @@
 import { useRef, useState, useCallback } from 'react'
 import { Preview2D } from './Preview2D'
-import { Preview3D, type Preview3DRef } from './PreviewStage'
+import { Preview3D, DEFAULT_ZOOM, type Preview3DRef } from './PreviewStage'
 import { CanvasToolbar } from './CanvasToolbar'
 import { useBoardStore, useDerived } from '../../state/boardStore'
 import { formatInches } from '../../domain/cutList'
 import { SIZE_CHIPS } from '../../domain/defaults'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Separator } from '@/components/ui/separator'
 
 export function BoardPreview() {
   const previewMode = useBoardStore((s) => s.previewMode)
@@ -30,7 +33,7 @@ export function BoardPreview() {
   )?.id
 
   const preview3DRef = useRef<Preview3DRef>(null)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM)
 
   const handleZoomIn = useCallback(() => {
     const newZoom = Math.min(zoom * 1.25, 4)
@@ -45,7 +48,7 @@ export function BoardPreview() {
   }, [zoom])
 
   const handleFit = useCallback(() => {
-    setZoom(1)
+    setZoom(DEFAULT_ZOOM)
     preview3DRef.current?.resetCamera()
   }, [])
 
@@ -61,115 +64,109 @@ export function BoardPreview() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Top toolbar with all board controls */}
-      <div className="no-print flex items-center gap-2 border-b border-border bg-card px-3 py-2">
+      <div className="no-print flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
         {/* View mode */}
-        <div className="flex rounded border border-border">
-          {(['3d', '2d'] as const).map((m, i) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setPreviewMode(m)}
-              className={`h-7 px-2.5 text-xs font-medium uppercase transition-colors ${
-                previewMode === m
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-              } ${i === 0 ? 'rounded-l' : 'rounded-r'}`}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
+        <ToggleGroup
+          type="single"
+          value={previewMode}
+          onValueChange={(v) => {
+            if (v === '3d' || v === '2d') setPreviewMode(v)
+          }}
+          variant="outline"
+          size="sm"
+        >
+          <ToggleGroupItem value="3d" className="text-xs font-medium uppercase">
+            3D
+          </ToggleGroupItem>
+          <ToggleGroupItem value="2d" className="text-xs font-medium uppercase">
+            2D
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         {/* Face mode */}
-        <div className="flex rounded border border-border">
-          {([['finished', 'Done'], ['glue1', 'Glue']] as const).map(([v, label], i) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setFaceMode(v)}
-              className={`h-7 px-2.5 text-xs transition-colors ${
-                faceMode === v
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-              } ${i === 0 ? 'rounded-l' : 'rounded-r'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <ToggleGroup
+          type="single"
+          value={faceMode}
+          onValueChange={(v) => {
+            if (v === 'finished' || v === 'glue1') setFaceMode(v)
+          }}
+          variant="outline"
+          size="sm"
+        >
+          <ToggleGroupItem value="finished" className="text-xs">
+            Done
+          </ToggleGroupItem>
+          <ToggleGroupItem value="glue1" className="text-xs">
+            Glue
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         {/* Grain mode */}
-        <div className="flex rounded border border-border">
-          {(['end', 'long'] as const).map((v, i) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setGrainMode(v)}
-              className={`h-7 px-2.5 text-xs capitalize transition-colors ${
-                board.grainMode === v
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-              } ${i === 0 ? 'rounded-l' : 'rounded-r'}`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
+        <ToggleGroup
+          type="single"
+          value={board.grainMode}
+          onValueChange={(v) => {
+            if (v === 'end' || v === 'long') setGrainMode(v)
+          }}
+          variant="outline"
+          size="sm"
+        >
+          <ToggleGroupItem value="end" className="text-xs capitalize">
+            end
+          </ToggleGroupItem>
+          <ToggleGroupItem value="long" className="text-xs capitalize">
+            long
+          </ToggleGroupItem>
+        </ToggleGroup>
 
-        <span className="h-5 w-px bg-border" />
+        <Separator orientation="vertical" className="h-5" />
 
         {/* Size presets */}
-        <div className="flex rounded border border-border">
-          {SIZE_CHIPS.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => applySize(c.length, c.width, c.thickness)}
-              className={`h-7 px-2 text-[11px] transition-colors ${
-                sizeId === c.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-              } ${i === 0 ? 'rounded-l' : ''} ${i === SIZE_CHIPS.length - 1 ? 'rounded-r' : ''}`}
-            >
+        <ToggleGroup
+          type="single"
+          value={sizeId ?? ''}
+          onValueChange={(v) => {
+            const c = SIZE_CHIPS.find((x) => x.id === v)
+            if (c) applySize(c.length, c.width, c.thickness)
+          }}
+          variant="outline"
+          size="sm"
+        >
+          {SIZE_CHIPS.map((c) => (
+            <ToggleGroupItem key={c.id} value={c.id} className="text-xs">
               {c.label}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
 
         {/* Dimensions */}
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">L</span>
-          <input
-            type="number"
+        <div className="flex items-center gap-2">
+          <DimensionField
+            label="L"
             value={board.settings.finishedLength}
-            onChange={(e) => patchSettings({ finishedLength: Number(e.target.value) || 12 })}
-            className="h-7 w-12 rounded border border-border bg-white text-center text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(n) => patchSettings({ finishedLength: n || 12 })}
           />
-          <span className="text-xs text-muted-foreground">W</span>
-          <input
-            type="number"
+          <DimensionField
+            label="W"
             value={board.settings.finishedWidth}
-            onChange={(e) => patchSettings({ finishedWidth: Number(e.target.value) || 8 })}
-            className="h-7 w-12 rounded border border-border bg-white text-center text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(n) => patchSettings({ finishedWidth: n || 8 })}
           />
-          <span className="text-xs text-muted-foreground">T</span>
-          <input
-            type="number"
+          <DimensionField
+            label="T"
             value={board.settings.finishedThickness}
-            onChange={(e) => patchSettings({ finishedThickness: Number(e.target.value) || 1.5 })}
-            className="h-7 w-11 rounded border border-border bg-white text-center text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(n) => patchSettings({ finishedThickness: n || 1.5 })}
             step={0.25}
           />
         </div>
 
-        <span className="h-5 w-px bg-border" />
+        <Separator orientation="vertical" className="h-5" />
 
         {/* Stop block result */}
-        <div className="flex items-center gap-1.5 rounded bg-primary/10 px-2 py-1">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 rounded-md border border-border bg-accent px-2 py-1">
+          <span className="text-xs text-accent-foreground/80">
             {board.grainMode === 'end' ? 'Stop' : 'Thk'}
           </span>
-          <span className="text-sm font-semibold tabular-nums text-primary">
+          <span className="text-sm font-semibold tabular-nums text-accent-foreground">
             {formatInches(summary.stopBlock)}
           </span>
         </div>
@@ -181,16 +178,15 @@ export function BoardPreview() {
         )}
 
         {/* Show dimensions toggle - pushed right */}
-        <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+        <label className="ml-auto flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
           <Checkbox
             checked={showDimensions}
             onCheckedChange={(v) => setShowDimensions(v === true)}
-            className="size-3.5"
           />
           Dims
         </label>
       </div>
-      <div className="relative min-h-0 flex-1 bg-[radial-gradient(circle_at_center,oklch(0.96_0.01_90),oklch(0.92_0.015_85))]">
+      <div className="relative min-h-0 flex-1 bg-preview-canvas">
         {previewMode === '3d' ? (
           <>
             <Preview3D
@@ -222,5 +218,35 @@ export function BoardPreview() {
         )}
       </div>
     </div>
+  )
+}
+
+function DimensionField({
+  label,
+  value,
+  onChange,
+  step,
+}: {
+  label: string
+  value: number
+  onChange: (n: number) => void
+  step?: number
+}) {
+  return (
+    <InputGroup className="h-8 w-20">
+      <InputGroupAddon align="inline-start" className="px-2 text-xs text-muted-foreground">
+        {label}
+      </InputGroupAddon>
+      <InputGroupInput
+        type="number"
+        value={value}
+        step={step}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-8 px-0 text-center text-xs tabular-nums"
+      />
+      <InputGroupAddon align="inline-end" className="px-2 text-xs text-muted-foreground">
+        &quot;
+      </InputGroupAddon>
+    </InputGroup>
   )
 }

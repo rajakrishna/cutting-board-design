@@ -41,19 +41,18 @@ export function InventoryPanel() {
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <label className="flex items-center gap-2">
+      <label className="flex min-h-8 items-center gap-2">
         <Checkbox checked={only} onCheckedChange={(v) => setOnly(v === true)} />
         <span className="text-xs">Only use these species</span>
       </label>
 
-      {/* Add stock form */}
-      <div className="space-y-2">
-        <div className="flex gap-1.5">
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
           <Select
             value={draft.woodId}
             onValueChange={(v) => setDraft({ ...draft, woodId: v })}
           >
-            <SelectTrigger className="h-7 flex-1 border border-border bg-white text-xs focus:ring-1 focus:ring-primary">
+            <SelectTrigger size="sm" className="flex-1 text-xs">
               <SelectValue placeholder="Species" />
             </SelectTrigger>
             <SelectContent>
@@ -78,9 +77,9 @@ export function InventoryPanel() {
           </Select>
           <Button
             type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2"
+            size="icon-sm"
+            variant="outline"
+            aria-label="Add stock item"
             onClick={() => {
               if (!draft.woodId) return
               const item: StockItem = {
@@ -98,15 +97,15 @@ export function InventoryPanel() {
           </Button>
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           {(['thickness', 'width', 'length', 'count'] as const).map((k) => (
             <div key={k} className="flex-1">
-              <div className="mb-0.5 text-center text-[10px] text-muted-foreground">
+              <div className="mb-1 text-center text-[10px] text-muted-foreground">
                 {k === 'thickness' ? 'T' : k === 'width' ? 'W' : k === 'length' ? 'L' : 'Qty'}
               </div>
               <Input
                 type="number"
-                className="h-7 border border-border bg-white px-1 text-center text-xs tabular-nums focus:ring-1 focus:ring-primary"
+                className="h-8 px-1 text-center text-xs tabular-nums"
                 value={draft[k] ?? 0}
                 onChange={(e) => setDraft({ ...draft, [k]: Number(e.target.value) })}
               />
@@ -115,51 +114,48 @@ export function InventoryPanel() {
         </div>
       </div>
 
-      {/* Inventory list */}
       {inventory.length > 0 && (
-        <div className="space-y-0.5">
+        <div className="flex flex-col gap-1">
           {inventory.map((i) => {
             const wood = getWood(i.woodId)
             return (
               <div
                 key={i.id}
-                className="group flex items-center gap-1.5 rounded px-1 py-1 hover:bg-accent/50"
+                className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent"
               >
                 <span
                   className="size-3 shrink-0 rounded-sm"
-                  style={{ backgroundColor: wood?.color ?? '#ccc' }}
+                  style={{ backgroundColor: wood?.color ?? '#94a3b8' }}
                 />
-                <span className="min-w-0 flex-1 truncate text-xs">
-                  {wood?.name}
-                </span>
+                <span className="min-w-0 flex-1 truncate text-xs">{wood?.name}</span>
                 <span className="tabular-nums text-[10px] text-muted-foreground">
                   {i.thickness}×{i.width}×{i.length}" ×{i.count}
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  size="icon-xs"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`Remove ${wood?.name ?? 'stock item'}`}
                   onClick={() => setInventory(inventory.filter((x) => x.id !== i.id))}
                 >
                   <X className="size-3.5" />
-                </button>
+                </Button>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* Suggestions */}
       {suggestions.length > 0 && (
-        <div>
-          <div className="mb-1 text-xs font-medium text-muted-foreground">
-            Suggestions
-          </div>
-          <div className="space-y-1">
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-muted-foreground">Suggestions</div>
+          <div className="flex flex-col gap-1">
             {suggestions.map((s) => (
               <button
                 key={s.presetId}
                 type="button"
-                className="w-full rounded px-2 py-1.5 text-left transition-colors hover:bg-accent/50"
+                className="min-h-8 w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 onClick={() => {
                   if (s.status === 'long-grain') setGrainMode('long')
                   loadPreset(s.presetId)

@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,60 +22,42 @@ export function CanvasToolbar({ zoom, onZoomIn, onZoomOut, onFit, onZoomTo }: Pr
   const displayZoom = Math.round(zoom * 100)
 
   return (
-    <div className="absolute bottom-2 right-2 z-10 flex items-center gap-0.5 rounded border border-border bg-card/95 p-0.5 shadow-sm backdrop-blur-sm">
-      <button
-        type="button"
-        onClick={onZoomOut}
-        title="Zoom out"
-        className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <Minus className="size-3" />
-      </button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="flex h-6 min-w-[44px] items-center justify-center rounded px-1.5 text-xs tabular-nums text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            {displayZoom}%
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="min-w-[72px]">
-          {ZOOM_LEVELS.map((level) => (
-            <DropdownMenuItem
-              key={level}
-              onClick={() => onZoomTo(level / 100)}
-              className="justify-center text-xs tabular-nums"
-            >
-              {level}%
+    <div className="absolute bottom-2 right-2 z-10">
+      <ButtonGroup className="bg-card/95 shadow-sm backdrop-blur-sm">
+        <Button variant="outline" size="icon-sm" onClick={onZoomOut} title="Zoom out">
+          <Minus className="size-3.5" />
+          <span className="sr-only">Zoom out</span>
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="min-w-13 tabular-nums">
+              {displayZoom}%
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="min-w-18">
+            {ZOOM_LEVELS.map((level) => (
+              <DropdownMenuItem
+                key={level}
+                onSelect={() => onZoomTo(level / 100)}
+                className="justify-center text-xs tabular-nums"
+              >
+                {level}%
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem onSelect={onFit} className="justify-center text-xs">
+              Fit
             </DropdownMenuItem>
-          ))}
-          <DropdownMenuItem onClick={onFit} className="justify-center text-xs">
-            Fit
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <button
-        type="button"
-        onClick={onZoomIn}
-        title="Zoom in"
-        className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <Plus className="size-3" />
-      </button>
-
-      <span className="mx-0.5 h-4 w-px bg-border" />
-
-      <button
-        type="button"
-        onClick={onFit}
-        title="Fit to screen"
-        className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <Maximize2 className="size-3" />
-      </button>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button variant="outline" size="icon-sm" onClick={onZoomIn} title="Zoom in">
+          <Plus className="size-3.5" />
+          <span className="sr-only">Zoom in</span>
+        </Button>
+        <Button variant="outline" size="icon-sm" onClick={onFit} title="Fit to screen">
+          <Maximize2 className="size-3.5" />
+          <span className="sr-only">Fit to screen</span>
+        </Button>
+      </ButtonGroup>
     </div>
   )
 }

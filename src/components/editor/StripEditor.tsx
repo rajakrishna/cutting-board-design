@@ -1,6 +1,7 @@
 import { useBoardStore } from '../../state/boardStore'
 import { getWood, WOODS } from '../../domain/woods'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -27,16 +28,16 @@ export function StripEditor() {
   const woodList = WOODS.filter((w) => w.foodSafe && (!allowed || allowed.includes(w.id)))
 
   return (
-    <div className="flex min-h-0 flex-col">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="flex min-h-0 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">Strips</h2>
-        <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={addStrip}>
+        <Button type="button" size="sm" variant="ghost" onClick={addStrip}>
           <Plus className="size-3.5" />
           Add
         </Button>
       </div>
 
-      <div className="space-y-1">
+      <div className="flex flex-col gap-2">
         {board.strips.map((s, i) => {
           const wood = getWood(s.woodId)
           const isSelected = selectedStripId === s.id
@@ -45,10 +46,10 @@ export function StripEditor() {
             <div
               key={s.id}
               className={cn(
-                'group flex items-center gap-1.5 rounded border bg-background px-1.5 py-1 transition-colors',
+                'group flex items-center gap-2 rounded-md border px-2 py-1.5 transition-colors',
                 isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-muted-foreground/50'
+                  ? 'border-primary bg-accent'
+                  : 'border-border bg-background hover:border-border-strong',
               )}
               onClick={() => selectStrip(isSelected ? null : s.id)}
             >
@@ -57,8 +58,8 @@ export function StripEditor() {
               </span>
 
               <span
-                className="size-4 shrink-0 rounded-sm border border-border/50"
-                style={{ backgroundColor: wood?.color ?? '#ccc' }}
+                className="size-4 shrink-0 rounded-sm border border-border"
+                style={{ backgroundColor: wood?.color ?? '#94a3b8' }}
               />
 
               <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
@@ -66,7 +67,7 @@ export function StripEditor() {
                   value={s.woodId}
                   onValueChange={(woodId) => updateStrip(s.id, { woodId })}
                 >
-                  <SelectTrigger className="h-7 w-full border border-border bg-white px-2 text-xs shadow-none focus:ring-1 focus:ring-primary">
+                  <SelectTrigger size="sm" className="w-full px-2 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -94,8 +95,8 @@ export function StripEditor() {
                 </Select>
               </div>
 
-              <div className="flex shrink-0 items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                <input
+              <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <Input
                   type="number"
                   value={s.width}
                   onChange={(e) => {
@@ -107,22 +108,25 @@ export function StripEditor() {
                   step={0.125}
                   min={0.25}
                   max={8}
-                  className="h-7 w-14 rounded border border-border bg-white text-center text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="h-8 w-14 px-1 text-center text-xs tabular-nums"
                 />
                 <span className="text-xs text-muted-foreground">"</span>
               </div>
 
-              <button
+              <Button
                 type="button"
-                className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0"
+                size="icon-xs"
+                variant="ghost"
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 onClick={(e) => {
                   e.stopPropagation()
                   removeStrip(s.id)
                 }}
                 disabled={board.strips.length <= 1}
+                aria-label={`Remove strip ${i + 1}`}
               >
                 <X className="size-3.5" />
-              </button>
+              </Button>
             </div>
           )
         })}

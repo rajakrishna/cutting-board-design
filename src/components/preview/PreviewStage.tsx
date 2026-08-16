@@ -8,6 +8,9 @@ import { formatInches } from '../../domain/cutList';
 import { DimensionLabels } from './DimensionLabels';
 import type { BoardGeometry } from '../../domain/types';
 
+/** Zoom the preview opens at, and returns to on Fit. */
+export const DEFAULT_ZOOM = 0.7;
+
 export type Preview3DRef = {
   resetCamera: () => void;
   setZoom: (level: number) => void;
@@ -135,7 +138,14 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
   return (
     <div className="relative h-full w-full bg-paper">
       <Canvas
-        camera={{ position: [maxDim * 0.9, maxDim * 0.7, maxDim * 0.9], fov: 40 }}
+        camera={{
+          position: [
+            (maxDim * 0.9) / DEFAULT_ZOOM,
+            (maxDim * 0.7) / DEFAULT_ZOOM,
+            (maxDim * 0.9) / DEFAULT_ZOOM,
+          ],
+          fov: 40,
+        }}
         onPointerMissed={() => props.onSelect(null)}
       >
         <ambientLight intensity={0.7} />

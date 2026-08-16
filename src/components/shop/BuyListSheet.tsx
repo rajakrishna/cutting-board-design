@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Printer, X } from 'lucide-react'
+import { Printer } from 'lucide-react'
 
 export function BuyListSheet() {
   const buyListOpen = useBoardStore((s) => s.buyListOpen)
@@ -34,33 +34,31 @@ export function BuyListSheet() {
         </SheetHeader>
 
         <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-4 p-4">
-            {/* Summary header */}
-            <div className="rounded-lg bg-muted/50 p-3">
+          <div className="flex flex-col gap-4 p-4">
+            <div className="rounded-lg border border-border bg-muted p-3">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">
                 {board.name || 'Cutting Board'}
               </div>
               <div className="mt-1 text-sm">
-                {summary.buyList.length} species · {summary.buyList.reduce((a, b) => a + parseFloat(b.boardFeet), 0).toFixed(1)} bf total
+                {summary.buyList.length} species · {summary.buyList.reduce((a, b) => a + Number(b.boardFeet), 0).toFixed(1)} bf total
               </div>
               {hasCosts && totalCost > 0 && (
                 <div className="mt-1 text-lg font-semibold">${totalCost.toFixed(2)}</div>
               )}
             </div>
 
-            {/* Species cards */}
             <div className="flex flex-col gap-3">
               {summary.buyList.map((b) => {
                 const wood = getWood(b.woodId)
                 const inv = invCompare.find((c) => c.woodId === b.woodId)
-                
+
                 return (
                   <Card key={b.woodId} className="shadow-none">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <span
-                          className="mt-0.5 size-5 shrink-0 rounded border border-border"
-                          style={{ background: wood?.color ?? '#ccc' }}
+                          className="mt-0.5 size-5 shrink-0 rounded-md border border-border"
+                          style={{ background: wood?.color ?? '#94a3b8' }}
                           aria-hidden
                         />
                         <div className="min-w-0 flex-1">
@@ -73,7 +71,7 @@ export function BuyListSheet() {
                             )}
                           </div>
                           {inv && (
-                            <div className={`mt-2 text-xs ${inv.enough ? 'text-ok' : 'text-warn'}`}>
+                            <div className={`mt-2 text-xs ${inv.enough ? 'text-success' : 'text-warning'}`}>
                               {inv.enough ? '✓ In stock' : `! Need ${(inv.need - inv.have).toFixed(1)} bf more`}
                               {' '}({inv.have.toFixed(1)} / {inv.need.toFixed(1)} bf)
                             </div>
@@ -89,7 +87,6 @@ export function BuyListSheet() {
               })}
             </div>
 
-            {/* Yard pick notes */}
             <div className="rounded-lg border border-border p-3">
               <div className="text-sm font-medium">Yard pick notes</div>
               <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">

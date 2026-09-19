@@ -1,7 +1,46 @@
 import type { MouseEvent } from 'react'
 import { PRESETS } from '../../data/templates'
+import { buildFinishedPolygons } from '../../domain/geometry'
 import { getWood } from '../../domain/woods'
+import type { Board, Preset } from '../../domain/types'
 import { useBoardStore } from '../../state/boardStore'
+
+function presetThumbBoard(preset: Preset): Board {
+  return {
+    id: 'thumb',
+    name: preset.name,
+    ...preset.board,
+    settings: {
+      ...preset.board.settings,
+      finishedLength: Math.min(8, preset.board.settings.finishedLength),
+    },
+  }
+}
+
+function FinishedThumb({ preset }: { preset: Preset }) {
+  const polys = buildFinishedPolygons(presetThumbBoard(preset))
+  const maxX = Math.max(...polys.map((p) => p.x + p.w), 1)
+  const maxY = Math.max(...polys.map((p) => p.y + p.h), 1)
+  return (
+    <svg
+      viewBox={`0 0 ${maxX} ${maxY}`}
+      className="h-10 w-full rounded-md border border-border"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      {polys.map((p) => (
+        <rect
+          key={p.stripId}
+          x={p.x}
+          y={p.y}
+          width={p.w}
+          height={p.h}
+          fill={getWood(p.woodId)?.color ?? '#94a3b8'}
+        />
+      ))}
+    </svg>
+  )
+}
 
 export function PresetGallery() {
   const loadPreset = useBoardStore((s) => s.loadPreset)
@@ -32,17 +71,8 @@ export function PresetGallery() {
                   'radial-gradient(110px circle at var(--x) var(--y), color-mix(in oklab, var(--primary) 20%, transparent), transparent 60%)',
               }}
             />
-            <span className="relative flex h-6 overflow-hidden rounded-md border border-border">
-              {p.board.strips.map((s, i) => (
-                <span
-                  key={`${p.id}-${i}`}
-                  className="h-full"
-                  style={{
-                    background: getWood(s.woodId)?.color ?? '#94a3b8',
-                    flexGrow: s.width,
-                  }}
-                />
-              ))}
+            <span className="relative">
+              <FinishedThumb preset={p} />
             </span>
             <span className="relative mt-2 block truncate text-xs font-medium">{p.name}</span>
           </button>

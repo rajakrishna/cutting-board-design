@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDefaultBoard } from './defaults';
-import { computeSliceCount, stopBlock } from './geometry';
+import { buildFinishedPolygons, computeSliceCount, stopBlock } from './geometry';
 import { computeCutSummary, formatInches } from './cutList';
 import { buildGuide } from './guide';
 import { randomizeBoard } from './randomize';
@@ -40,6 +40,17 @@ describe('domain engine', () => {
   it('formats fractions', () => {
     expect(formatInches(1.5)).toBe('1 1/2"');
     expect(formatInches(0.125)).toBe('1/8"');
+  });
+
+  it('cube illusion cycles strip order each row', () => {
+    const preset = PRESETS.find((p) => p.id === 'cube-illusion')!;
+    const board = { id: 't', name: 't', ...preset.board };
+    const polys = buildFinishedPolygons(board);
+    const row0 = polys.filter((p) => p.stripId.endsWith('-r0')).map((p) => p.woodId);
+    const row1 = polys.filter((p) => p.stripId.endsWith('-r1')).map((p) => p.woodId);
+    expect(row0.length).toBeGreaterThan(2);
+    expect(row1[0]).toBe(row0[1]);
+    expect(row1[1]).toBe(row0[2]);
   });
 
   it('does not randomize to an offset-row pattern', () => {

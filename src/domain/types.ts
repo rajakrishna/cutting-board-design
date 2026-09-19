@@ -57,6 +57,8 @@ export type BoardSettings = {
   makeCount: number;
   planerWidth: number;
   rowOffset: number;
+  /** Cyclic strip shift per finished row. 1 = cube / tumbling-block. */
+  cycleShift: number;
   pricePerBf: Record<string, number>;
   extras: BoardExtras;
 };

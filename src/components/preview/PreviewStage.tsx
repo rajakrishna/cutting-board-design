@@ -6,7 +6,9 @@ import * as THREE from 'three';
 import { getWood } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
 import { DimensionLabels } from './DimensionLabels';
-import type { BoardGeometry, GrainMode } from '../../domain/types';
+import type { BuildStage } from '../../domain/buildStages';
+import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
+import type { BoardGeometry, GrainMode, RectPoly } from '../../domain/types';
 import { DEFAULT_ZOOM, frameBoardCamera, type CameraPose } from './cameraFraming';
 
 export { DEFAULT_ZOOM };
@@ -21,6 +23,9 @@ type Props = {
   geometry: BoardGeometry;
   face: 'finished' | 'glue1';
   grainMode: GrainMode;
+  buildStage: BuildStage;
+  sliceGap: number;
+  kerfCuts: KerfCut[];
   showDimensions: boolean;
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
@@ -28,8 +33,19 @@ type Props = {
   onZoomChange?: (zoom: number) => void;
 };
 
-function faceSpans(geometry: BoardGeometry, face: Props['face']) {
-  const polys = face === 'finished' ? geometry.finished : geometry.glueUp1;
+function facePolys(geometry: BoardGeometry, face: Props['face']): RectPoly[] {
+  return face === 'finished' ? geometry.finished : geometry.glueUp1;
+}
+
+function spacedPolys(polys: RectPoly[], sliceGap: number): RectPoly[] {
+  if (sliceGap <= 0) return polys;
+  return polys.map((p) => ({
+    ...p,
+    y: p.y + rowIndexFromStripId(p.stripId) * sliceGap,
+  }));
+}
+
+function faceSpans(polys: RectPoly[]) {
   const spanX = Math.max(...polys.map((p) => p.x + p.w), 1);
   const spanZ = Math.max(...polys.map((p) => p.y + p.h), 1);
   return { spanX, spanZ };
@@ -49,16 +65,21 @@ function applyCameraPose(
 }
 
 function BoardMesh({
-  geometry,
-  face,
+  polys,
   selectedStripId,
   onSelect,
   thickness,
-}: Omit<Props, 'showDimensions' | 'grainMode' | 'onZoomChange'>) {
-  const polys = face === 'finished' ? geometry.finished : geometry.glueUp1;
+  kerfCuts,
+}: {
+  polys: RectPoly[];
+  selectedStripId: string | null;
+  onSelect: (id: string | null) => void;
+  thickness: number;
+  kerfCuts: KerfCut[];
+}) {
   const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
   const maxY = Math.max(...polys.map((p) => p.y + p.h), 1);
-  const t = face === 'finished' ? thickness : geometry.overall.thickness;
+  const t = thickness;
 
   return (
     <group position={[-maxX / 2, 0, -maxY / 2]}>
@@ -91,6 +112,12 @@ function BoardMesh({
           </group>
         );
       })}
+      {kerfCuts.map((c, i) => (
+        <mesh key={`kerf-${i}`} position={[maxX / 2, t + 0.03, c.y + c.h / 2]}>
+          <boxGeometry args={[maxX + 0.15, 0.06, Math.max(0.06, c.h)]} />
+          <meshStandardMaterial color="#1c1917" />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -99,11 +126,13 @@ function CameraController({
   controlsRef,
   pose,
   grainMode,
+  buildStage,
   onZoomChange,
 }: {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
   pose: CameraPose;
   grainMode: GrainMode;
+  buildStage: BuildStage;
   onZoomChange?: (zoom: number) => void;
 }) {
   const { camera } = useThree();
@@ -112,7 +141,7 @@ function CameraController({
 
   useEffect(() => {
     applyCameraPose(camera, controlsRef.current, poseRef.current);
-  }, [camera, controlsRef, grainMode]);
+  }, [camera, controlsRef, grainMode, buildStage]);
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -132,19 +161,34 @@ function CameraController({
 }
 
 export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(props, ref) {
-  const { geometry, face, grainMode, showDimensions, onZoomChange } = props;
+  const {
+    geometry,
+    face,
+    grainMode,
+    buildStage,
+    sliceGap,
+    kerfCuts,
+    showDimensions,
+    onZoomChange,
+  } = props;
   const { length, width, thickness } = geometry.overall;
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const { spanX, spanZ } = faceSpans(geometry, face);
+  const polys = useMemo(
+    () => spacedPolys(facePolys(geometry, face), sliceGap),
+    [geometry, face, sliceGap],
+  );
+  const { spanX, spanZ } = faceSpans(polys);
+  const meshThickness = face === 'finished' ? props.thickness : geometry.overall.thickness;
   const pose = useMemo(
     () =>
       frameBoardCamera({
         spanX,
         spanZ,
-        thickness: props.thickness,
+        thickness: meshThickness,
         grainMode,
+        stage: grainMode === 'end' ? buildStage : undefined,
       }),
-    [spanX, spanZ, props.thickness, grainMode],
+    [spanX, spanZ, meshThickness, grainMode, buildStage],
   );
 
   useImperativeHandle(ref, () => ({
@@ -182,7 +226,13 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
       >
         <ambientLight intensity={0.7} />
         <directionalLight position={[8, 12, 6]} intensity={0.9} />
-        <BoardMesh {...props} />
+        <BoardMesh
+          polys={polys}
+          selectedStripId={props.selectedStripId}
+          onSelect={props.onSelect}
+          thickness={meshThickness}
+          kerfCuts={kerfCuts}
+        />
         <DimensionLabels
           length={length}
           width={width}
@@ -194,6 +244,7 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
           controlsRef={controlsRef}
           pose={pose}
           grainMode={grainMode}
+          buildStage={buildStage}
           onZoomChange={onZoomChange}
         />
       </Canvas>

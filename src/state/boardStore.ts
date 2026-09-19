@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { BuildStage } from '../domain/buildStages';
 import type { Board, GrainMode, StockItem, Strip } from '../domain/types';
 import { createDefaultBoard } from '../domain/defaults';
 import { PRESETS, getPreset } from '../data/templates';
@@ -29,6 +30,7 @@ type BoardStore = {
   advanced: boolean;
   previewMode: PreviewMode;
   faceMode: FaceMode;
+  buildStage: BuildStage;
   showDimensions: boolean;
   selectedStripId: string | null;
   appView: AppView;
@@ -50,6 +52,7 @@ type BoardStore = {
   undo: () => void;
   setPreviewMode: (m: PreviewMode) => void;
   setFaceMode: (m: FaceMode) => void;
+  setBuildStage: (s: BuildStage) => void;
   setShowDimensions: (v: boolean) => void;
   setAppView: (v: AppView) => void;
   setSheetTab: (t: SheetTab) => void;
@@ -120,6 +123,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   advanced: typeof window !== 'undefined' ? localStorage.getItem(ADV_KEY) === '1' : false,
   previewMode: '3d',
   faceMode: 'finished',
+  buildStage: 'final',
   showDimensions: true,
   selectedStripId: null,
   appView: 'design',
@@ -208,7 +212,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         flattenAllowance: prev.settings.flattenAllowance,
         stockMode: prev.settings.stockMode,
       },
-      sliceOverrides: [],
+      sliceOverrides: (preset.board.sliceOverrides ?? []).map((o) => ({ ...o })),
     };
     persist(board);
     set({ board, undoBoard: prev, selectedStripId: null });
@@ -234,7 +238,16 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   setPreviewMode: (m) => set({ previewMode: m }),
-  setFaceMode: (m) => set({ faceMode: m }),
+  setFaceMode: (m) =>
+    set({
+      faceMode: m,
+      buildStage: m === 'glue1' ? 'start' : 'final',
+    }),
+  setBuildStage: (s) =>
+    set({
+      buildStage: s,
+      faceMode: s === 'start' || s === 'cut' ? 'glue1' : 'finished',
+    }),
   setShowDimensions: (v) => set({ showDimensions: v }),
   setAppView: (v) => set({ appView: v, guideStep: 0 }),
   setSheetTab: (t) => set({ sheetTab: t }),

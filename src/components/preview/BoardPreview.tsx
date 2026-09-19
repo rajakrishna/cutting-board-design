@@ -1,8 +1,15 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Preview2D } from './Preview2D'
 import { Preview3D, DEFAULT_ZOOM, type Preview3DRef } from './PreviewStage'
+import { BuildStageBar } from './BuildStageBar'
 import { CanvasToolbar } from './CanvasToolbar'
 import { useBoardStore, useDerived } from '../../state/boardStore'
+import {
+  glueUpKerfCuts,
+  stageShowsKerf,
+  stageSliceGap,
+  stageUsesFinished,
+} from '../../domain/buildStages'
 import { formatInches } from '../../domain/cutList'
 import { SIZE_CHIPS } from '../../domain/defaults'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -26,6 +33,8 @@ export function BoardPreview() {
   const selectStrip = useBoardStore((s) => s.selectStrip)
   const setPreviewMode = useBoardStore((s) => s.setPreviewMode)
   const setFaceMode = useBoardStore((s) => s.setFaceMode)
+  const buildStage = useBoardStore((s) => s.buildStage)
+  const setBuildStage = useBoardStore((s) => s.setBuildStage)
   const setShowDimensions = useBoardStore((s) => s.setShowDimensions)
   const board = useBoardStore((s) => s.board)
   const patchSettings = useBoardStore((s) => s.patchSettings)
@@ -71,9 +80,16 @@ export function BoardPreview() {
 
   useEffect(() => {
     setZoom(DEFAULT_ZOOM)
-  }, [board.grainMode])
+  }, [board.grainMode, buildStage])
 
   const endGrain = board.grainMode === 'end'
+  const stageFace = endGrain
+    ? stageUsesFinished(buildStage)
+      ? 'finished'
+      : 'glue1'
+    : faceMode
+  const sliceGap = endGrain ? stageSliceGap(buildStage) : 0
+  const kerfCuts = endGrain && stageShowsKerf(buildStage) ? glueUpKerfCuts(board) : []
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -99,7 +115,7 @@ export function BoardPreview() {
         <div className="flex flex-col gap-0.5">
           <ToggleGroup
             type="single"
-            value={faceMode}
+            value={stageFace}
             onValueChange={(v) => {
               if (v === 'finished' || v === 'glue1') setFaceMode(v)
             }}
@@ -205,7 +221,8 @@ export function BoardPreview() {
           Dims
         </label>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {endGrain && <BuildStageBar stage={buildStage} onStage={setBuildStage} />}
         <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Pattern
         </span>
@@ -235,8 +252,11 @@ export function BoardPreview() {
             <Preview3D
               ref={preview3DRef}
               geometry={geometry}
-              face={faceMode}
+              face={stageFace}
               grainMode={board.grainMode}
+              buildStage={endGrain ? buildStage : 'final'}
+              sliceGap={sliceGap}
+              kerfCuts={kerfCuts}
               showDimensions={showDimensions}
               selectedStripId={selectedStripId}
               onSelect={selectStrip}
@@ -254,7 +274,9 @@ export function BoardPreview() {
         ) : (
           <Preview2D
             geometry={geometry}
-            face={faceMode}
+            face={stageFace}
+            sliceGap={sliceGap}
+            kerfCuts={kerfCuts}
             showDimensions={showDimensions}
             selectedStripId={selectedStripId}
             onSelect={selectStrip}

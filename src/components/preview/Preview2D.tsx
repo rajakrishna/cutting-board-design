@@ -1,25 +1,43 @@
 import { getWood } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
-import type { BoardGeometry } from '../../domain/types';
+import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
+import type { BoardGeometry, RectPoly } from '../../domain/types';
 
 type Props = {
   geometry: BoardGeometry;
   face: 'finished' | 'glue1';
+  sliceGap?: number;
+  kerfCuts?: KerfCut[];
   showDimensions: boolean;
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
 };
 
+function spacedPolys(polys: RectPoly[], sliceGap: number): RectPoly[] {
+  if (sliceGap <= 0) return polys;
+  return polys.map((p) => ({
+    ...p,
+    y: p.y + rowIndexFromStripId(p.stripId) * sliceGap,
+  }));
+}
+
 export function Preview2D({
   geometry,
   face,
+  sliceGap = 0,
+  kerfCuts = [],
   showDimensions,
   selectedStripId,
   onSelect,
 }: Props) {
-  const polys = face === 'finished' ? geometry.finished : geometry.glueUp1;
+  const raw = face === 'finished' ? geometry.finished : geometry.glueUp1;
+  const polys = spacedPolys(raw, sliceGap);
   const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
-  const maxY = Math.max(...polys.map((p) => p.y + p.h), 1);
+  const maxY = Math.max(
+    ...polys.map((p) => p.y + p.h),
+    ...kerfCuts.map((c) => c.y + c.h),
+    1,
+  );
   const pad = 40;
   const w = 400;
   const h = 320;
@@ -47,6 +65,16 @@ export function Preview2D({
             />
           );
         })}
+        {kerfCuts.map((c, i) => (
+          <rect
+            key={`kerf-${i}`}
+            x={-2}
+            y={c.y * scale}
+            width={maxX * scale + 4}
+            height={Math.max(2, c.h * scale)}
+            fill="#1c1917"
+          />
+        ))}
         {showDimensions && (
           <>
             <text x={0} y={-12} className="tabular fill-ink text-[11px]">

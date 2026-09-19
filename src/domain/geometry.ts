@@ -92,8 +92,16 @@ export function buildFinishedPolygons(board: Board): RectPoly[] {
     const isFlipped = override?.flipped ?? flipped;
     const isRotated = override?.rotated ?? rotated;
     const offset = row % 2 === 1 ? rowOffset * (stripWidths[0] ?? blockW) : 0;
-
-    const order = isFlipped ? [...board.strips].reverse() : board.strips;
+    const cycle = board.settings.cycleShift ?? 0;
+    const shift =
+      board.strips.length === 0
+        ? 0
+        : (((row * cycle) % board.strips.length) + board.strips.length) % board.strips.length;
+    const cycled =
+      shift === 0
+        ? board.strips
+        : [...board.strips.slice(shift), ...board.strips.slice(0, shift)];
+    const order = isFlipped ? [...cycled].reverse() : cycled;
     let x = offset;
     for (const s of order) {
       const w = s.width;

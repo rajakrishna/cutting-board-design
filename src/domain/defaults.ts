@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: BoardSettings = {
   makeCount: 1,
   planerWidth: 13,
   rowOffset: 0,
+  cycleShift: 0,
   pricePerBf: {},
   extras: {
     juiceGroove: false,

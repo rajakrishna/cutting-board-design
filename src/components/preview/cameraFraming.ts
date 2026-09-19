@@ -1,3 +1,4 @@
+import type { BuildStage } from '../../domain/buildStages'
 import type { GrainMode } from '../../domain/types'
 
 /** Zoom the preview opens at, and returns to on Fit. */
@@ -9,22 +10,32 @@ export type CameraPose = {
   distance: number
 }
 
-/** Long-grain 3/4: existing low isometric. End grain: slight overhead so the finished face fills the view. */
-const FRAMING = {
+type Framing = { x: number; y: number; z: number }
+
+/** Long-grain 3/4: existing low isometric. End grain Final: slight overhead hero. */
+const FRAMING: Record<'end' | 'long' | BuildStage, Framing> = {
   end: { x: 0.46, y: 1.24, z: 0.5 },
   long: { x: 0.9, y: 0.7, z: 0.9 },
-} as const
+  start: { x: 0.95, y: 0.58, z: 0.72 },
+  cut: { x: 0.32, y: 1.32, z: 0.48 },
+  glue: { x: 0.55, y: 1.12, z: 0.58 },
+  final: { x: 0.46, y: 1.24, z: 0.5 },
+}
 
 export function frameBoardCamera(opts: {
   spanX: number
   spanZ: number
   thickness: number
   grainMode: GrainMode
+  stage?: BuildStage
   zoom?: number
 }): CameraPose {
   const zoom = opts.zoom ?? DEFAULT_ZOOM
   const maxDim = Math.max(opts.spanX, opts.spanZ, 10)
-  const dir = FRAMING[opts.grainMode]
+  const dir =
+    opts.grainMode === 'long'
+      ? FRAMING.long
+      : FRAMING[opts.stage ?? 'final']
   const target: [number, number, number] = [0, opts.thickness / 2, 0]
   const offset: [number, number, number] = [maxDim * dir.x, maxDim * dir.y, maxDim * dir.z]
   const position: [number, number, number] = [

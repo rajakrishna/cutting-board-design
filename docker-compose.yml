@@ -1,0 +1,8 @@
+services:
+  cutting-board:
+    build: .
+    image: cutting-board-design:local
+    container_name: cutting-board
+    restart: unless-stopped
+    ports:
+      - "3080:80"

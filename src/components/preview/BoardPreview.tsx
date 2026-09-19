@@ -1,11 +1,21 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Preview2D } from './Preview2D'
 import { Preview3D, DEFAULT_ZOOM, type Preview3DRef } from './PreviewStage'
+import { BuildStageBar } from './BuildStageBar'
 import { CanvasToolbar } from './CanvasToolbar'
 import { useBoardStore, useDerived } from '../../state/boardStore'
+import {
+  glueUpKerfCuts,
+  glueUpSliceBands,
+  stageShowsKerf,
+  stageShowsSliceOutlines,
+  stageSliceGap,
+  stageUsesFinished,
+} from '../../domain/buildStages'
 import { formatInches } from '../../domain/cutList'
 import { SIZE_CHIPS } from '../../domain/defaults'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import {
@@ -25,6 +35,8 @@ export function BoardPreview() {
   const selectStrip = useBoardStore((s) => s.selectStrip)
   const setPreviewMode = useBoardStore((s) => s.setPreviewMode)
   const setFaceMode = useBoardStore((s) => s.setFaceMode)
+  const buildStage = useBoardStore((s) => s.buildStage)
+  const setBuildStage = useBoardStore((s) => s.setBuildStage)
   const setShowDimensions = useBoardStore((s) => s.setShowDimensions)
   const board = useBoardStore((s) => s.board)
   const patchSettings = useBoardStore((s) => s.patchSettings)
@@ -68,11 +80,25 @@ export function BoardPreview() {
     setZoom(newZoom)
   }, [])
 
+  useEffect(() => {
+    setZoom(DEFAULT_ZOOM)
+  }, [board.grainMode, buildStage])
+
+  const endGrain = board.grainMode === 'end'
+  const stageFace = endGrain
+    ? stageUsesFinished(buildStage)
+      ? 'finished'
+      : 'glue1'
+    : faceMode
+  const sliceGap = endGrain ? stageSliceGap(buildStage) : 0
+  const kerfCuts = endGrain && stageShowsKerf(buildStage) ? glueUpKerfCuts(board) : []
+  const sliceBands =
+    endGrain && stageShowsSliceOutlines(buildStage) ? glueUpSliceBands(board) : []
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Top toolbar with all board controls */}
-      <div className="no-print flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
-        {/* View mode */}
+      <div className="no-print flex shrink-0 flex-col gap-1.5 border-b border-border bg-card px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
           type="single"
           value={previewMode}
@@ -90,25 +116,25 @@ export function BoardPreview() {
           </ToggleGroupItem>
         </ToggleGroup>
 
-        {/* Face mode */}
-        <ToggleGroup
-          type="single"
-          value={faceMode}
-          onValueChange={(v) => {
-            if (v === 'finished' || v === 'glue1') setFaceMode(v)
-          }}
-          variant="outline"
-          size="sm"
-        >
-          <ToggleGroupItem value="finished" className="text-xs">
-            Done
-          </ToggleGroupItem>
-          <ToggleGroupItem value="glue1" className="text-xs">
-            Glue
-          </ToggleGroupItem>
-        </ToggleGroup>
+        {!endGrain && (
+          <ToggleGroup
+            type="single"
+            value={stageFace}
+            onValueChange={(v) => {
+              if (v === 'finished' || v === 'glue1') setFaceMode(v)
+            }}
+            variant="outline"
+            size="sm"
+          >
+            <ToggleGroupItem value="finished" className="text-xs">
+              Finished (edge)
+            </ToggleGroupItem>
+            <ToggleGroupItem value="glue1" className="text-xs">
+              Glue-up
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
 
-        {/* Grain mode */}
         <ToggleGroup
           type="single"
           value={board.grainMode}
@@ -118,11 +144,11 @@ export function BoardPreview() {
           variant="outline"
           size="sm"
         >
-          <ToggleGroupItem value="end" className="text-xs capitalize">
-            end
+          <ToggleGroupItem value="end" className="text-xs">
+            End grain
           </ToggleGroupItem>
-          <ToggleGroupItem value="long" className="text-xs capitalize">
-            long
+          <ToggleGroupItem value="long" className="text-xs">
+            Edge grain
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -130,16 +156,19 @@ export function BoardPreview() {
 
         {/* Size presets */}
         <Select
-          value={sizeId}
+          value={sizeId ?? 'custom'}
           onValueChange={(v) => {
             const c = SIZE_CHIPS.find((x) => x.id === v)
             if (c) applySize(c.length, c.width, c.thickness)
           }}
         >
           <SelectTrigger size="sm" className="w-28 text-xs">
-            <SelectValue placeholder="Sizes" />
+            <SelectValue placeholder={sizeId ? 'Sizes' : 'Custom'} />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="custom" disabled>
+              Custom
+            </SelectItem>
             {SIZE_CHIPS.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.label}
@@ -148,8 +177,7 @@ export function BoardPreview() {
           </SelectContent>
         </Select>
 
-        {/* Dimensions */}
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           <DimensionField
             label="L"
             value={board.settings.finishedLength}
@@ -168,10 +196,9 @@ export function BoardPreview() {
           />
         </div>
 
-        <Separator orientation="vertical" className="h-5" />
+        <Separator orientation="vertical" className="hidden h-5 md:block" />
 
-        {/* Stop block result */}
-        <div className="flex items-center gap-1.5 rounded-md border border-border bg-accent px-2 py-1">
+        <div className="hidden items-center gap-1.5 rounded-md border border-border bg-accent px-2 py-1 md:flex">
           <span className="text-xs text-accent-foreground/80">
             {board.grainMode === 'end' ? 'Stop' : 'Thk'}
           </span>
@@ -181,13 +208,12 @@ export function BoardPreview() {
         </div>
 
         {board.grainMode === 'end' && (
-          <span className="text-xs text-muted-foreground">
+          <span className="hidden text-xs text-muted-foreground md:inline">
             {summary.sliceCount} slices · {formatInches(summary.leftover)} left
           </span>
         )}
 
-        {/* Show dimensions toggle - pushed right */}
-        <label className="ml-auto flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+        <label className="ml-auto hidden min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground sm:flex">
           <Checkbox
             checked={showDimensions}
             onCheckedChange={(v) => setShowDimensions(v === true)}
@@ -195,13 +221,50 @@ export function BoardPreview() {
           Dims
         </label>
       </div>
-      <div className="relative min-h-0 flex-1 bg-preview-canvas">
+      {endGrain && (
+        <div className="min-w-0">
+          <BuildStageBar stage={buildStage} onStage={setBuildStage} />
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Pattern
+        </span>
+        <Toggle
+          variant="outline"
+          size="sm"
+          className="sm:h-10 sm:px-2.5"
+          pressed={board.settings.flipAlternate}
+          onPressedChange={(v) => patchSettings({ flipAlternate: v })}
+          aria-label="Flip alternate slices"
+        >
+          Flip alternate
+        </Toggle>
+        <Toggle
+          variant="outline"
+          size="sm"
+          className="sm:h-10 sm:px-2.5"
+          pressed={board.settings.rotateAlternate}
+          onPressedChange={(v) => patchSettings({ rotateAlternate: v })}
+          aria-label="Rotate alternate slices"
+        >
+          Rotate alternate
+        </Toggle>
+      </div>
+      </div>
+      <div className="relative min-h-[140px] flex-1 bg-preview-canvas">
         {previewMode === '3d' ? (
           <>
             <Preview3D
               ref={preview3DRef}
               geometry={geometry}
-              face={faceMode}
+              face={stageFace}
+              grainMode={board.grainMode}
+              buildStage={endGrain ? buildStage : 'final'}
+              sliceGap={sliceGap}
+              kerfCuts={kerfCuts}
+              sliceBands={sliceBands}
+              oiled={endGrain && buildStage === 'final'}
               showDimensions={showDimensions}
               selectedStripId={selectedStripId}
               onSelect={selectStrip}
@@ -219,7 +282,11 @@ export function BoardPreview() {
         ) : (
           <Preview2D
             geometry={geometry}
-            face={faceMode}
+            face={stageFace}
+            sliceGap={sliceGap}
+            kerfCuts={kerfCuts}
+            sliceBands={sliceBands}
+            oiled={endGrain && buildStage === 'final'}
             showDimensions={showDimensions}
             selectedStripId={selectedStripId}
             onSelect={selectStrip}

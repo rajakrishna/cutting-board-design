@@ -9,6 +9,7 @@ import { BuildGuide } from '../guide/BuildGuide'
 import { PrintShopSheet } from '../shop/PrintShopSheet'
 import { BuyListSheet } from '../shop/BuyListSheet'
 import { ThemeToggle } from '../theme/theme-toggle'
+import { BoardTitle } from './BoardTitle'
 import { formatInches } from '../../domain/cutList'
 import { useIsDesktop } from '@/hooks/use-is-desktop'
 import { Button } from '@/components/ui/button'
@@ -36,12 +37,11 @@ export function AppShell() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-svh w-full min-h-0 flex-col overflow-hidden bg-background text-foreground">
-        <header className="no-print flex h-12 shrink-0 items-center gap-2 border-b border-border bg-card px-3">
-          <PanelsTopLeft className="size-4 text-primary" />
-          <div className="text-sm font-semibold tracking-tight">
-            Cutting Board Designer
-          </div>
-          <Separator orientation="vertical" className="mx-1 h-5" />
+        <header className="no-print flex h-11 shrink-0 items-center gap-1.5 border-b border-border bg-card px-3">
+          <PanelsTopLeft className="size-4 shrink-0 text-primary" aria-hidden />
+          <span className="sr-only">Cutting Board Designer</span>
+          <BoardTitle />
+          <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
           <nav className="flex gap-2">
             <Button
               type="button"
@@ -89,7 +89,7 @@ export function AppShell() {
 
         {!isDesktop ? (
           <div className="no-print flex min-h-0 flex-1 flex-col">
-            <div className="h-[40vh] min-h-[180px] shrink-0 border-b border-border">
+            <div className="h-[52vh] min-h-[280px] shrink-0 border-b border-border">
               <BoardPreview />
             </div>
             <div className="shrink-0 border-b border-border bg-card px-3 py-2">
@@ -118,7 +118,8 @@ export function AppShell() {
               <div className="flex flex-col gap-4 p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 {sheetTab === 'woods' && (
                   <div className="flex flex-col gap-4">
-                    <StripEditor />
+                    <PresetGallery />
+                    <Separator />
                     <InventoryPanel />
                   </div>
                 )}

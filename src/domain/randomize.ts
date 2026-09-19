@@ -55,7 +55,8 @@ export function randomizeBoard(
   const endPresets = presets.filter(
     (p) =>
       (p.board.grainMode === current.grainMode || p.board.grainMode === 'end') &&
-      p.board.settings.rowOffset === 0,
+      p.board.settings.rowOffset === 0 &&
+      (p.board.settings.cycleShift ?? 0) === 0,
   );
   const pool = endPresets.length ? endPresets : presets;
   const preset = pick(pool);
@@ -85,6 +86,7 @@ export function randomizeBoard(
       flipAlternate: preset.board.settings.flipAlternate,
       rotateAlternate: preset.board.settings.rotateAlternate,
       rowOffset: preset.board.settings.rowOffset,
+      cycleShift: preset.board.settings.cycleShift ?? 0,
     },
     sliceOverrides: [],
   };

@@ -286,6 +286,12 @@ export function getWood(id: string): Wood | undefined {
   return WOODS.find((w) => w.id === id);
 }
 
+export function woodPreviewColor(woodId: string, oiled: boolean): string {
+  const wood = getWood(woodId)
+  if (!wood) return '#ccc'
+  return oiled ? wood.oiledColor : wood.color
+}
+
 export function getWoodOrThrow(id: string): Wood {
   const w = getWood(id);
   if (!w) throw new Error(`Unknown wood: ${id}`);

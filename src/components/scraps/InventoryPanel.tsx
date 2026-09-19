@@ -63,11 +63,13 @@ export function InventoryPanel() {
                   <SelectGroup key={group}>
                     <SelectLabel className="capitalize">{group}</SelectLabel>
                     {items.map((w) => (
-                      <SelectItem key={w.id} value={w.id}>
-                        <span className="flex items-center gap-2">
-                          <span className="size-3 rounded-sm" style={{ backgroundColor: w.color }} />
-                          {w.name}
-                        </span>
+                      <SelectItem key={w.id} value={w.id} textValue={w.name}>
+                        <span
+                          className="inline-block size-3.5 shrink-0 rounded-sm border border-border"
+                          style={{ backgroundColor: w.color }}
+                          aria-hidden
+                        />
+                        {w.name}
                       </SelectItem>
                     ))}
                   </SelectGroup>

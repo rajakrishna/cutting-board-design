@@ -1,3 +1,4 @@
+import { formatInches } from '../../domain/cutList'
 import { cn } from '@/lib/utils'
 import { Minus, Plus } from 'lucide-react'
 
@@ -14,12 +15,13 @@ type Props = {
 
 function formatValue(value: number, unit?: string): string {
   if (unit === 'inches') {
-    return `${value}″`
+    return formatInches(Math.round(value * 1000) / 1000)
   }
   if (unit === 'degrees') {
-    return `${value}°`
+    return `${Math.round(value * 10) / 10}°`
   }
-  return String(value)
+  const rounded = Math.round(value * 1000) / 1000
+  return String(rounded)
 }
 
 export function NumberStepper({

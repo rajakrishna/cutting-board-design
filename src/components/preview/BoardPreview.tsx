@@ -93,7 +93,7 @@ export function BoardPreview() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="no-print flex flex-col gap-1.5 border-b border-border bg-card px-3 py-2">
+      <div className="no-print flex shrink-0 flex-col gap-1.5 border-b border-border bg-card px-3 py-2">
         <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
           type="single"
@@ -123,14 +123,20 @@ export function BoardPreview() {
             size="sm"
           >
             <ToggleGroupItem value="finished" className="text-xs">
-              {endGrain ? 'Finished (end grain)' : 'Finished (edge)'}
+              <span className="sm:hidden">Finished</span>
+              <span className="hidden sm:inline">
+                {endGrain ? 'Finished (end grain)' : 'Finished (edge)'}
+              </span>
             </ToggleGroupItem>
             <ToggleGroupItem value="glue1" className="text-xs">
-              {endGrain ? 'Glue-up (edge)' : 'Glue-up'}
+              <span className="sm:hidden">Glue-up</span>
+              <span className="hidden sm:inline">
+                {endGrain ? 'Glue-up (edge)' : 'Glue-up'}
+              </span>
             </ToggleGroupItem>
           </ToggleGroup>
           {endGrain && (
-            <p className="text-[11px] leading-snug text-muted-foreground">
+            <p className="hidden text-[11px] leading-snug text-muted-foreground sm:block">
               Crosscut → rotate 90° → re-glue
             </p>
           )}
@@ -157,7 +163,7 @@ export function BoardPreview() {
 
         {/* Size presets */}
         <Select
-          value={sizeId}
+          value={sizeId ?? 'custom'}
           onValueChange={(v) => {
             const c = SIZE_CHIPS.find((x) => x.id === v)
             if (c) applySize(c.length, c.width, c.thickness)
@@ -167,6 +173,9 @@ export function BoardPreview() {
             <SelectValue placeholder={sizeId ? 'Sizes' : 'Custom'} />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="custom" disabled>
+              Custom
+            </SelectItem>
             {SIZE_CHIPS.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.label}
@@ -175,8 +184,7 @@ export function BoardPreview() {
           </SelectContent>
         </Select>
 
-        {/* Dimensions */}
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           <DimensionField
             label="L"
             value={board.settings.finishedLength}
@@ -195,10 +203,9 @@ export function BoardPreview() {
           />
         </div>
 
-        <Separator orientation="vertical" className="h-5" />
+        <Separator orientation="vertical" className="hidden h-5 md:block" />
 
-        {/* Stop block result */}
-        <div className="flex items-center gap-1.5 rounded-md border border-border bg-accent px-2 py-1">
+        <div className="hidden items-center gap-1.5 rounded-md border border-border bg-accent px-2 py-1 md:flex">
           <span className="text-xs text-accent-foreground/80">
             {board.grainMode === 'end' ? 'Stop' : 'Thk'}
           </span>
@@ -208,12 +215,12 @@ export function BoardPreview() {
         </div>
 
         {board.grainMode === 'end' && (
-          <span className="text-xs text-muted-foreground">
+          <span className="hidden text-xs text-muted-foreground md:inline">
             {summary.sliceCount} slices · {formatInches(summary.leftover)} left
           </span>
         )}
 
-        <label className="ml-auto flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+        <label className="ml-auto hidden min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground sm:flex">
           <Checkbox
             checked={showDimensions}
             onCheckedChange={(v) => setShowDimensions(v === true)}
@@ -232,7 +239,8 @@ export function BoardPreview() {
         </span>
         <Toggle
           variant="outline"
-          size="lg"
+          size="sm"
+          className="sm:h-10 sm:px-2.5"
           pressed={board.settings.flipAlternate}
           onPressedChange={(v) => patchSettings({ flipAlternate: v })}
           aria-label="Flip alternate slices"
@@ -241,7 +249,8 @@ export function BoardPreview() {
         </Toggle>
         <Toggle
           variant="outline"
-          size="lg"
+          size="sm"
+          className="sm:h-10 sm:px-2.5"
           pressed={board.settings.rotateAlternate}
           onPressedChange={(v) => patchSettings({ rotateAlternate: v })}
           aria-label="Rotate alternate slices"
@@ -250,7 +259,7 @@ export function BoardPreview() {
         </Toggle>
       </div>
       </div>
-      <div className="relative min-h-0 flex-1 bg-preview-canvas">
+      <div className="relative min-h-[140px] flex-1 bg-preview-canvas">
         {previewMode === '3d' ? (
           <>
             <Preview3D

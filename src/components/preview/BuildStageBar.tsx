@@ -33,7 +33,7 @@ export function BuildStageBar({ stage, onStage }: Props) {
           ))}
         </ToggleGroup>
         <Slider
-          className="min-w-28 max-w-48"
+          className="hidden min-w-28 max-w-48 sm:flex"
           min={0}
           max={3}
           step={1}
@@ -45,7 +45,7 @@ export function BuildStageBar({ stage, onStage }: Props) {
           aria-label="Build stage"
         />
       </div>
-      <p className="text-[11px] leading-snug text-muted-foreground">{meta.caption}</p>
+      <p className="hidden text-[11px] leading-snug text-muted-foreground sm:block">{meta.caption}</p>
     </div>
   )
 }

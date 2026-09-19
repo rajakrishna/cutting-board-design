@@ -89,7 +89,7 @@ export function AppShell() {
 
         {!isDesktop ? (
           <div className="no-print flex min-h-0 flex-1 flex-col">
-            <div className="h-[40vh] min-h-[180px] shrink-0 border-b border-border">
+            <div className="h-[52vh] min-h-[280px] shrink-0 border-b border-border">
               <BoardPreview />
             </div>
             <div className="shrink-0 border-b border-border bg-card px-3 py-2">

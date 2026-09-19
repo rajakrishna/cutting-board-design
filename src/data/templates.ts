@@ -42,15 +42,15 @@ export const PRESETS: Preset[] = [
       grainMode: 'end',
       strips: repeat(
         [
-          ['hard-maple', 4 / 3],
-          ['walnut', 4 / 3],
-          ['cherry', 4 / 3],
+          ['hard-maple', 1.25],
+          ['walnut', 1.25],
+          ['cherry', 1.25],
         ],
         3,
       ),
       settings: baseSettings({
-        finishedWidth: 12,
-        panelThickness: 4 / 3,
+        finishedWidth: 11.25,
+        panelThickness: 1.25,
         cycleShift: 1,
         flipAlternate: false,
       }),

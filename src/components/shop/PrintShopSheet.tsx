@@ -17,7 +17,7 @@ export function PrintShopSheet() {
           <h1 className="text-2xl font-semibold">{board.name}</h1>
           <p className="tabular text-sm text-muted">
             {formatInches(board.settings.finishedLength)} × {formatInches(board.settings.finishedWidth)} ×{' '}
-            {formatInches(board.settings.finishedThickness)} · {board.grainMode === 'end' ? 'End grain' : 'Long grain'}
+            {formatInches(board.settings.finishedThickness)} · {board.grainMode === 'end' ? 'End grain' : 'Edge grain'}
           </p>
 
           <div className="mt-4">

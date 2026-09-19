@@ -6,7 +6,12 @@ import { woodPreviewColor } from '../../domain/woods'
 import type { Board, Preset } from '../../domain/types'
 import { useBoardStore } from '../../state/boardStore'
 
-const APPROXIMATE = new Set(['tumbling-block', 'four-towers', 'chevron'])
+const APPROXIMATE = new Set([
+  'cube-illusion',
+  'tumbling-block',
+  'four-towers',
+  'chevron',
+])
 
 function presetThumbBoard(preset: Preset): Board {
   return {

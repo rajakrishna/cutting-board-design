@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import { PRESETS } from '../../data/templates'
 import { buildFinishedPolygons } from '../../domain/geometry'
+import { parallelogramPoints, polyBounds } from '../../domain/polyShape'
 import { woodPreviewColor } from '../../domain/woods'
 import type { Board, Preset } from '../../domain/types'
 import { useBoardStore } from '../../state/boardStore'
@@ -19,22 +20,22 @@ function presetThumbBoard(preset: Preset): Board {
 
 function FinishedThumb({ preset }: { preset: Preset }) {
   const polys = buildFinishedPolygons(presetThumbBoard(preset))
-  const maxX = Math.max(...polys.map((p) => p.x + p.w), 1)
-  const maxY = Math.max(...polys.map((p) => p.y + p.h), 1)
+  const b = polyBounds(polys)
+  const w = Math.max(b.maxX - b.minX, 1)
+  const h = Math.max(b.maxY - b.minY, 1)
   return (
     <svg
-      viewBox={`0 0 ${maxX} ${maxY}`}
+      viewBox={`${b.minX} ${b.minY} ${w} ${h}`}
       className="h-10 w-full rounded-md border border-border"
       preserveAspectRatio="none"
       aria-hidden
     >
       {polys.map((p) => (
-        <rect
+        <polygon
           key={p.stripId}
-          x={p.x}
-          y={p.y}
-          width={p.w}
-          height={p.h}
+          points={parallelogramPoints(p)
+            .map(([x, y]) => `${x},${y}`)
+            .join(' ')}
           fill={woodPreviewColor(p.woodId, true)}
         />
       ))}

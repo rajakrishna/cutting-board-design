@@ -112,7 +112,7 @@ export function buildFinishedPolygons(board: Board): RectPoly[] {
         y: row * rowH,
         w,
         h: rowH,
-        angle: isRotated ? s.trailingAngle + 90 : s.trailingAngle,
+        angle: isFlipped || isRotated ? -s.trailingAngle : s.trailingAngle,
       });
       x += w;
     }

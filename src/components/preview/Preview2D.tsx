@@ -1,5 +1,6 @@
 import { woodPreviewColor } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
+import { parallelogramPoints, polyBounds } from '../../domain/polyShape';
 import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
 import type { BoardGeometry, RectPoly } from '../../domain/types';
 
@@ -34,30 +35,29 @@ export function Preview2D({
 }: Props) {
   const raw = face === 'finished' ? geometry.finished : geometry.glueUp1;
   const polys = spacedPolys(raw, sliceGap);
-  const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
-  const maxY = Math.max(
-    ...polys.map((p) => p.y + p.h),
-    ...kerfCuts.map((c) => c.y + c.h),
-    1,
-  );
+  const bounds = polyBounds(polys);
+  const maxX = Math.max(bounds.maxX, 1);
+  const maxY = Math.max(bounds.maxY, ...kerfCuts.map((c) => c.y + c.h), 1);
+  const spanX = Math.max(maxX - bounds.minX, 1);
+  const spanY = Math.max(maxY - bounds.minY, 1);
   const pad = 40;
   const w = 400;
   const h = 320;
-  const scale = Math.min((w - pad * 2) / maxX, (h - pad * 2) / maxY);
+  const scale = Math.min((w - pad * 2) / spanX, (h - pad * 2) / spanY);
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-full w-full bg-paper" role="img" aria-label="Board preview 2D">
       <rect x={0} y={0} width={w} height={h} fill="var(--paper)" />
-      <g transform={`translate(${pad}, ${pad})`}>
+      <g transform={`translate(${pad - bounds.minX * scale}, ${pad - bounds.minY * scale})`}>
         {polys.map((p) => {
           const selected = selectedStripId != null && p.stripId.startsWith(selectedStripId);
+          const pts = parallelogramPoints(p)
+            .map(([x, y]) => `${x * scale},${y * scale}`)
+            .join(' ');
           return (
-            <rect
+            <polygon
               key={p.stripId}
-              x={p.x * scale}
-              y={p.y * scale}
-              width={Math.max(1, p.w * scale)}
-              height={Math.max(1, p.h * scale)}
+              points={pts}
               fill={woodPreviewColor(p.woodId, oiled)}
               stroke={selected ? 'var(--accent)' : 'var(--line)'}
               strokeWidth={selected ? 2 : 0.5}
@@ -69,26 +69,26 @@ export function Preview2D({
         {kerfCuts.map((c, i) => (
           <rect
             key={`kerf-${i}`}
-            x={-2}
+            x={bounds.minX * scale - 2}
             y={c.y * scale}
-            width={maxX * scale + 4}
+            width={spanX * scale + 4}
             height={Math.max(2, c.h * scale)}
             fill="#1c1917"
           />
         ))}
         {showDimensions && (
           <>
-            <text x={0} y={-12} className="tabular fill-ink text-[11px]">
+            <text x={bounds.minX * scale} y={bounds.minY * scale - 12} className="tabular fill-ink text-[11px]">
               {formatInches(geometry.overall.width)} wide
             </text>
             <text
               x={maxX * scale + 8}
-              y={maxY * scale / 2}
+              y={(bounds.minY + maxY) * scale / 2}
               className="tabular fill-ink text-[11px]"
             >
               {formatInches(geometry.overall.length)}
             </text>
-            <text x={0} y={maxY * scale + 18} className="tabular fill-muted text-[11px]">
+            <text x={bounds.minX * scale} y={maxY * scale + 18} className="tabular fill-muted text-[11px]">
               {formatInches(geometry.overall.thickness)} thick
             </text>
           </>

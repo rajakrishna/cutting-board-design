@@ -5,6 +5,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { woodPreviewColor } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
+import { polyBounds, shearOffset } from '../../domain/polyShape';
 import { DimensionLabels } from './DimensionLabels';
 import type { BuildStage } from '../../domain/buildStages';
 import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
@@ -47,9 +48,15 @@ function spacedPolys(polys: RectPoly[], sliceGap: number): RectPoly[] {
 }
 
 function faceSpans(polys: RectPoly[]) {
-  const spanX = Math.max(...polys.map((p) => p.x + p.w), 1);
-  const spanZ = Math.max(...polys.map((p) => p.y + p.h), 1);
-  return { spanX, spanZ };
+  const b = polyBounds(polys);
+  return {
+    spanX: Math.max(b.maxX - b.minX, 1),
+    spanZ: Math.max(b.maxY - b.minY, 1),
+    minX: b.minX,
+    minY: b.minY,
+    maxX: b.maxX,
+    maxY: b.maxY,
+  };
 }
 
 function applyCameraPose(
@@ -80,19 +87,27 @@ function BoardMesh({
   kerfCuts: KerfCut[];
   oiled: boolean;
 }) {
-  const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
-  const maxY = Math.max(...polys.map((p) => p.y + p.h), 1);
+  const bounds = polyBounds(polys);
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cz = (bounds.minY + bounds.maxY) / 2;
+  const spanX = Math.max(bounds.maxX - bounds.minX, 1);
   const t = thickness;
 
   return (
-    <group position={[-maxX / 2, 0, -maxY / 2]}>
+    <group position={[-cx, 0, -cz]}>
       {polys.map((p) => {
         const selected = selectedStripId != null && p.stripId.startsWith(selectedStripId);
         const baseId = p.stripId.split('-r')[0] ?? p.stripId;
+        const xz = shearOffset(p.angle, 1);
+        const matrix = new THREE.Matrix4().makeTranslation(p.x + p.w / 2, t / 2, p.y + p.h / 2);
+        if (xz !== 0) {
+          matrix.multiply(new THREE.Matrix4().makeShear(0, xz, 0, 0, 0, 0));
+        }
         return (
           <group key={p.stripId}>
             <mesh
-              position={[p.x + p.w / 2, t / 2, p.y + p.h / 2]}
+              matrix={matrix}
+              matrixAutoUpdate={false}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect(baseId);
@@ -106,7 +121,7 @@ function BoardMesh({
               />
             </mesh>
             {selected && (
-              <lineSegments position={[p.x + p.w / 2, t / 2, p.y + p.h / 2]}>
+              <lineSegments matrix={matrix} matrixAutoUpdate={false}>
                 <edgesGeometry args={[new THREE.BoxGeometry(p.w + 0.05, t + 0.05, p.h + 0.05)]} />
                 <lineBasicMaterial color="#3b82f6" linewidth={2} />
               </lineSegments>
@@ -115,8 +130,8 @@ function BoardMesh({
         );
       })}
       {kerfCuts.map((c, i) => (
-        <mesh key={`kerf-${i}`} position={[maxX / 2, t + 0.03, c.y + c.h / 2]}>
-          <boxGeometry args={[maxX + 0.15, 0.06, Math.max(0.06, c.h)]} />
+        <mesh key={`kerf-${i}`} position={[cx, t + 0.03, c.y + c.h / 2]}>
+          <boxGeometry args={[spanX + 0.15, 0.06, Math.max(0.06, c.h)]} />
           <meshStandardMaterial color="#1c1917" />
         </mesh>
       ))}

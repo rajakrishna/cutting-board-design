@@ -42,23 +42,46 @@ describe('domain engine', () => {
     expect(formatInches(0.125)).toBe('1/8"');
   });
 
-  it('cube illusion cycles strip order each row', () => {
+  it('ships the eight research presets', () => {
+    expect(PRESETS.map((p) => p.id)).toEqual([
+      'cube-illusion',
+      'newton-3d',
+      'tumbling-block',
+      'four-towers',
+      'checkerboard',
+      'brick',
+      'chevron',
+      'butcher-bands',
+    ]);
+  });
+
+  it('cube illusion cycles maple → cherry → walnut each row', () => {
     const preset = PRESETS.find((p) => p.id === 'cube-illusion')!;
     const board = { id: 't', name: 't', ...preset.board };
     const polys = buildFinishedPolygons(board);
     const row0 = polys.filter((p) => p.stripId.endsWith('-r0')).map((p) => p.woodId);
     const row1 = polys.filter((p) => p.stripId.endsWith('-r1')).map((p) => p.woodId);
-    expect(row0.length).toBeGreaterThan(2);
+    expect(row0.slice(0, 3)).toEqual(['hard-maple', 'cherry', 'walnut']);
     expect(row1[0]).toBe(row0[1]);
     expect(row1[1]).toBe(row0[2]);
+  });
+
+  it('chevron negates trailing angle on rotated rows', () => {
+    const preset = PRESETS.find((p) => p.id === 'chevron')!;
+    const board = { id: 't', name: 't', ...preset.board };
+    const polys = buildFinishedPolygons(board);
+    const row0 = polys.find((p) => p.stripId.endsWith('-r0'))!;
+    const row1 = polys.find((p) => p.stripId.endsWith('-r1'))!;
+    expect(row0.angle).toBe(20);
+    expect(row1.angle).toBe(-20);
   });
 
   it('does not randomize to an offset-row pattern', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const brick = PRESETS.find((preset) => preset.id === 'brick')!;
-    const stripes = PRESETS.find((preset) => preset.id === 'stripes')!;
+    const checker = PRESETS.find((preset) => preset.id === 'checkerboard')!;
 
-    const board = randomizeBoard(createDefaultBoard(), [brick, stripes]);
+    const board = randomizeBoard(createDefaultBoard(), [brick, checker]);
 
     expect(board.settings.rowOffset).toBe(0);
   });

@@ -32,19 +32,21 @@ export const PRESETS: Preset[] = [
   {
     id: 'cube-illusion',
     name: 'Cube Illusion',
-    description: 'Three-tone isometric cubes — maple, walnut, cherry. Shift each row one strip.',
+    description:
+      'Maple (lit), cherry (mid), walnut (dark). Cycle-shift each row — same species meet only at corners.',
     cutCard: {
       ripAngle: 0,
       miterAngle: 0,
-      notes: 'Equal-width ABC repeat. Crosscut at strip width. Cycle-shift each slice by one.',
+      notes:
+        'Equal-width ABC. Crosscut at strip width. Cycle-shift each slice by one. Square cells — 60° hex rhombi are not in the strip model.',
     },
     board: {
       grainMode: 'end',
       strips: repeat(
         [
           ['hard-maple', 1.25],
-          ['walnut', 1.25],
           ['cherry', 1.25],
+          ['walnut', 1.25],
         ],
         3,
       ),
@@ -58,26 +60,92 @@ export const PRESETS: Preset[] = [
     },
   },
   {
-    id: 'stripes',
-    name: 'Classic Stripes',
-    description: 'Alternating maple and walnut. Square rips.',
-    cutCard: { ripAngle: 0, miterAngle: 0, notes: 'Square rips, 0° trailing.' },
+    id: 'newton-3d',
+    name: 'Newton 3D Block',
+    description: 'Four-wood highlight/shadow — maple, cherry, sapele, walnut.',
+    cutCard: {
+      ripAngle: 0,
+      miterAngle: 0,
+      notes: 'ABCD repeat. Crosscut at strip width. Cycle-shift each slice by one.',
+    },
     board: {
       grainMode: 'end',
       strips: repeat(
         [
-          ['walnut', 1.5],
           ['hard-maple', 1.5],
+          ['cherry', 1.5],
+          ['sapele', 1.5],
+          ['walnut', 1.5],
+        ],
+        2,
+      ),
+      settings: baseSettings({
+        finishedWidth: 12,
+        panelThickness: 1.5,
+        cycleShift: 1,
+        flipAlternate: false,
+      }),
+      sliceOverrides: [],
+    },
+  },
+  {
+    id: 'tumbling-block',
+    name: 'Tumbling Diamond',
+    description: 'Two-tone maple + walnut. 30° lean, flip and rotate alternate rows.',
+    cutCard: {
+      ripAngle: 0,
+      miterAngle: 30,
+      notes:
+        '30° trailing. Flip + rotate every other slice. Preview shears cells; not a hex tumbling-block tiling.',
+    },
+    board: {
+      grainMode: 'end',
+      strips: repeat(
+        [
+          ['hard-maple', 1.5, 30],
+          ['walnut', 1.5, 30],
         ],
         4,
       ),
-      settings: baseSettings({ finishedWidth: 12, flipAlternate: false }),
+      settings: baseSettings({
+        finishedWidth: 12,
+        panelThickness: 1.5,
+        flipAlternate: true,
+        rotateAlternate: true,
+      }),
+      sliceOverrides: [],
+    },
+  },
+  {
+    id: 'four-towers',
+    name: 'Four Towers',
+    description: 'Stepped 3D — wide walnut towers, maple risers, each row shifted one strip.',
+    cutCard: {
+      ripAngle: 0,
+      miterAngle: 0,
+      notes: 'Wide/narrow AB repeat. Cycle-shift 1 so the towers step. Not full 3D tower geometry.',
+    },
+    board: {
+      grainMode: 'end',
+      strips: repeat(
+        [
+          ['walnut', 2],
+          ['hard-maple', 1],
+        ],
+        4,
+      ),
+      settings: baseSettings({
+        finishedWidth: 12,
+        panelThickness: 1.5,
+        cycleShift: 1,
+        flipAlternate: false,
+      }),
       sliceOverrides: [],
     },
   },
   {
     id: 'checkerboard',
-    name: 'Checkerboard',
+    name: 'Classic Checker',
     description: 'Two-wood flip every other slice.',
     cutCard: {
       ripAngle: 0,
@@ -129,109 +197,34 @@ export const PRESETS: Preset[] = [
   {
     id: 'chevron',
     name: 'Chevron',
-    description: 'Angled strips, flip alternate. Preview is square cells; 15° is on the cut card.',
+    description: 'Angled strips, rotate alternate so the lean flips.',
     cutCard: {
       ripAngle: 0,
-      miterAngle: 15,
-      notes: 'Trailing 15°. Flip every other slice. Not true herringbone rhombi.',
+      miterAngle: 20,
+      notes: 'Trailing 20°. Rotate every other slice (preview shears; not true herringbone rhombi).',
     },
     board: {
       grainMode: 'end',
-      strips: repeat([['walnut', 1.25, 15], ['hard-maple', 1.25, 15]], 4),
+      strips: repeat(
+        [
+          ['walnut', 1.25, 20],
+          ['hard-maple', 1.25, 20],
+        ],
+        4,
+      ),
       settings: baseSettings({
         finishedWidth: 10,
-        flipAlternate: true,
+        panelThickness: 1.25,
+        flipAlternate: false,
         rotateAlternate: true,
       }),
       sliceOverrides: [],
     },
   },
   {
-    id: 'tumbling-block',
-    name: 'Tumbling Block',
-    description: 'Chunkier 3-wood shift. Closest to tumbling-block without 60° rhombi.',
-    cutCard: {
-      ripAngle: 0,
-      miterAngle: 0,
-      notes: 'ABC repeat, 2″ cells, cycle-shift 1. Square approximation of tumbling block.',
-    },
-    board: {
-      grainMode: 'end',
-      strips: repeat(
-        [
-          ['cherry', 2],
-          ['hard-maple', 2],
-          ['walnut', 2],
-        ],
-        2,
-      ),
-      settings: baseSettings({
-        finishedWidth: 12,
-        panelThickness: 2,
-        cycleShift: 1,
-        flipAlternate: false,
-      }),
-      sliceOverrides: [],
-    },
-  },
-  {
-    id: 'four-towers',
-    name: 'Four Towers',
-    description: 'Paired blocks that stack into four masses. Strip-model stand-in for 2×2 towers.',
-    cutCard: {
-      ripAngle: 0,
-      miterAngle: 0,
-      notes: 'AABB repeat, cycle-shift 2 so towers trade places each row.',
-    },
-    board: {
-      grainMode: 'end',
-      strips: repeat(
-        [
-          ['walnut', 1.5],
-          ['walnut', 1.5],
-          ['hard-maple', 1.5],
-          ['hard-maple', 1.5],
-        ],
-        2,
-      ),
-      settings: baseSettings({
-        finishedWidth: 12,
-        panelThickness: 1.5,
-        cycleShift: 2,
-        flipAlternate: false,
-      }),
-      sliceOverrides: [],
-    },
-  },
-  {
-    id: 'three-wood',
-    name: 'Three-Wood Bands',
-    description: 'Maple, walnut, and cherry bands. No row shift.',
-    cutCard: {
-      ripAngle: 0,
-      miterAngle: 0,
-      notes: '0°; listed strip widths.',
-    },
-    board: {
-      grainMode: 'end',
-      strips: [
-        s('hard-maple', 2),
-        s('walnut', 1),
-        s('cherry', 2),
-        s('walnut', 1),
-        s('hard-maple', 2),
-        s('walnut', 1),
-        s('cherry', 2),
-        s('walnut', 1),
-      ],
-      settings: baseSettings({ finishedWidth: 12 }),
-      sliceOverrides: [],
-    },
-  },
-  {
-    id: 'accent-stripe',
-    name: 'Accent Stripe',
-    description: 'Butcher-block maple field with walnut + padauk pinstripes.',
+    id: 'butcher-bands',
+    name: 'Butcher Bands',
+    description: 'Maple field with bold walnut accent bands.',
     cutCard: {
       ripAngle: 0,
       miterAngle: 0,
@@ -240,39 +233,15 @@ export const PRESETS: Preset[] = [
     board: {
       grainMode: 'end',
       strips: [
-        s('hard-maple', 2.5),
-        s('walnut', 0.375),
-        s('padauk', 0.75),
-        s('walnut', 0.375),
-        s('hard-maple', 3.25),
-        s('walnut', 0.375),
-        s('padauk', 0.75),
-        s('walnut', 0.375),
         s('hard-maple', 2.25),
-      ],
-      settings: baseSettings({ finishedWidth: 11, flipAlternate: false }),
-      sliceOverrides: [],
-    },
-  },
-  {
-    id: 'minimalist',
-    name: 'Minimalist Two-Wood',
-    description: 'Beginner default — wide maple with walnut accents.',
-    cutCard: {
-      ripAngle: 0,
-      miterAngle: 0,
-      notes: '0°; beginner default.',
-    },
-    board: {
-      grainMode: 'end',
-      strips: [
-        s('hard-maple', 3),
         s('walnut', 0.75),
-        s('hard-maple', 4.5),
+        s('hard-maple', 2.5),
         s('walnut', 0.75),
-        s('hard-maple', 3),
+        s('hard-maple', 2.5),
+        s('walnut', 0.75),
+        s('hard-maple', 2.5),
       ],
-      settings: baseSettings({ finishedWidth: 12, wastePercent: 10 }),
+      settings: baseSettings({ finishedWidth: 12, flipAlternate: false }),
       sliceOverrides: [],
     },
   },

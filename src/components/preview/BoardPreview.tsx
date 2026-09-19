@@ -6,7 +6,9 @@ import { CanvasToolbar } from './CanvasToolbar'
 import { useBoardStore, useDerived } from '../../state/boardStore'
 import {
   glueUpKerfCuts,
+  glueUpSliceBands,
   stageShowsKerf,
+  stageShowsSliceOutlines,
   stageSliceGap,
   stageUsesFinished,
 } from '../../domain/buildStages'
@@ -90,6 +92,8 @@ export function BoardPreview() {
     : faceMode
   const sliceGap = endGrain ? stageSliceGap(buildStage) : 0
   const kerfCuts = endGrain && stageShowsKerf(buildStage) ? glueUpKerfCuts(board) : []
+  const sliceBands =
+    endGrain && stageShowsSliceOutlines(buildStage) ? glueUpSliceBands(board) : []
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -112,7 +116,7 @@ export function BoardPreview() {
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className="flex flex-col gap-0.5">
+        {!endGrain && (
           <ToggleGroup
             type="single"
             value={stageFace}
@@ -123,24 +127,13 @@ export function BoardPreview() {
             size="sm"
           >
             <ToggleGroupItem value="finished" className="text-xs">
-              <span className="sm:hidden">Finished</span>
-              <span className="hidden sm:inline">
-                {endGrain ? 'Finished (end grain)' : 'Finished (edge)'}
-              </span>
+              Finished (edge)
             </ToggleGroupItem>
             <ToggleGroupItem value="glue1" className="text-xs">
-              <span className="sm:hidden">Glue-up</span>
-              <span className="hidden sm:inline">
-                {endGrain ? 'Glue-up (edge)' : 'Glue-up'}
-              </span>
+              Glue-up
             </ToggleGroupItem>
           </ToggleGroup>
-          {endGrain && (
-            <p className="hidden text-[11px] leading-snug text-muted-foreground sm:block">
-              Crosscut → rotate 90° → re-glue
-            </p>
-          )}
-        </div>
+        )}
 
         <ToggleGroup
           type="single"
@@ -270,6 +263,7 @@ export function BoardPreview() {
               buildStage={endGrain ? buildStage : 'final'}
               sliceGap={sliceGap}
               kerfCuts={kerfCuts}
+              sliceBands={sliceBands}
               oiled={endGrain && buildStage === 'final'}
               showDimensions={showDimensions}
               selectedStripId={selectedStripId}
@@ -291,6 +285,7 @@ export function BoardPreview() {
             face={stageFace}
             sliceGap={sliceGap}
             kerfCuts={kerfCuts}
+            sliceBands={sliceBands}
             oiled={endGrain && buildStage === 'final'}
             showDimensions={showDimensions}
             selectedStripId={selectedStripId}

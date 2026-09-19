@@ -1,7 +1,7 @@
 import { woodPreviewColor } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
 import { parallelogramPoints, polyBounds } from '../../domain/polyShape';
-import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
+import { rowIndexFromStripId, type KerfCut, type SliceBand } from '../../domain/buildStages';
 import type { BoardGeometry, RectPoly } from '../../domain/types';
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   face: 'finished' | 'glue1';
   sliceGap?: number;
   kerfCuts?: KerfCut[];
+  sliceBands?: SliceBand[];
   oiled?: boolean;
   showDimensions: boolean;
   selectedStripId: string | null;
@@ -28,6 +29,7 @@ export function Preview2D({
   face,
   sliceGap = 0,
   kerfCuts = [],
+  sliceBands = [],
   oiled = false,
   showDimensions,
   selectedStripId,
@@ -66,6 +68,18 @@ export function Preview2D({
             />
           );
         })}
+        {sliceBands.map((b, i) => (
+          <rect
+            key={`slice-${i}`}
+            x={bounds.minX * scale - 1}
+            y={b.y * scale}
+            width={spanX * scale + 2}
+            height={Math.max(2, b.h * scale)}
+            fill="none"
+            stroke="#1c1917"
+            strokeWidth={1.25}
+          />
+        ))}
         {kerfCuts.map((c, i) => (
           <rect
             key={`kerf-${i}`}

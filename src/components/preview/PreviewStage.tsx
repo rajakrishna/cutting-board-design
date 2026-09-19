@@ -8,7 +8,7 @@ import { formatInches } from '../../domain/cutList';
 import { polyBounds, shearOffset } from '../../domain/polyShape';
 import { DimensionLabels } from './DimensionLabels';
 import type { BuildStage } from '../../domain/buildStages';
-import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
+import { rowIndexFromStripId, type KerfCut, type SliceBand } from '../../domain/buildStages';
 import type { BoardGeometry, GrainMode, RectPoly } from '../../domain/types';
 import { DEFAULT_ZOOM, frameBoardCamera, type CameraPose } from './cameraFraming';
 
@@ -27,6 +27,7 @@ type Props = {
   buildStage: BuildStage;
   sliceGap: number;
   kerfCuts: KerfCut[];
+  sliceBands: SliceBand[];
   oiled: boolean;
   showDimensions: boolean;
   selectedStripId: string | null;
@@ -78,6 +79,7 @@ function BoardMesh({
   onSelect,
   thickness,
   kerfCuts,
+  sliceBands,
   oiled,
 }: {
   polys: RectPoly[];
@@ -85,6 +87,7 @@ function BoardMesh({
   onSelect: (id: string | null) => void;
   thickness: number;
   kerfCuts: KerfCut[];
+  sliceBands: SliceBand[];
   oiled: boolean;
 }) {
   const bounds = polyBounds(polys);
@@ -129,6 +132,12 @@ function BoardMesh({
           </group>
         );
       })}
+      {sliceBands.map((b, i) => (
+        <lineSegments key={`slice-${i}`} position={[cx, t / 2, b.y + b.h / 2]}>
+          <edgesGeometry args={[new THREE.BoxGeometry(spanX + 0.16, t + 0.1, b.h)]} />
+          <lineBasicMaterial color="#1c1917" />
+        </lineSegments>
+      ))}
       {kerfCuts.map((c, i) => (
         <mesh key={`kerf-${i}`} position={[cx, t + 0.03, c.y + c.h / 2]}>
           <boxGeometry args={[spanX + 0.15, 0.06, Math.max(0.06, c.h)]} />
@@ -185,6 +194,7 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
     buildStage,
     sliceGap,
     kerfCuts,
+    sliceBands,
     oiled,
     showDimensions,
     onZoomChange,
@@ -250,6 +260,7 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
           onSelect={props.onSelect}
           thickness={meshThickness}
           kerfCuts={kerfCuts}
+          sliceBands={sliceBands}
           oiled={oiled}
         />
         <DimensionLabels

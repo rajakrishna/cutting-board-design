@@ -28,7 +28,8 @@ export function BuildStageBar({ stage, onStage }: Props) {
         >
           {BUILD_STAGES.map((s) => (
             <ToggleGroupItem key={s} value={s} className="text-xs">
-              {BUILD_STAGE_META[s].label}
+              <span className="sm:hidden">{BUILD_STAGE_META[s].short}</span>
+              <span className="hidden sm:inline">{BUILD_STAGE_META[s].label}</span>
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

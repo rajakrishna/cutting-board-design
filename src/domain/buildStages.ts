@@ -6,22 +6,26 @@ export type BuildStage = (typeof BUILD_STAGES)[number]
 
 export const BUILD_STAGE_META: Record<
   BuildStage,
-  { label: string; caption: string }
+  { label: string; short: string; caption: string }
 > = {
   start: {
-    label: 'Start',
-    caption: 'Strip layout — first glue-up, edge-grain blank',
+    label: 'Edge glue-up',
+    short: 'Edge',
+    caption: 'First glue-up — edge-grain blank',
   },
   cut: {
     label: 'Cut',
-    caption: 'Crosscut slices at the stop. Kerf shown.',
+    short: 'Cut',
+    caption: 'Crosscut slices outlined at the stop. Kerf shown.',
   },
   glue: {
-    label: 'Glue',
+    label: 'Glue-up',
+    short: 'Glue',
     caption: 'Stand on end → flip/rotate alternate → re-glue',
   },
   final: {
-    label: 'Final',
+    label: 'End-grain finished',
+    short: 'End',
     caption: 'Finished end-grain face',
   },
 }
@@ -46,7 +50,12 @@ export function stageShowsKerf(stage: BuildStage): boolean {
   return stage === 'cut'
 }
 
+export function stageShowsSliceOutlines(stage: BuildStage): boolean {
+  return stage === 'cut'
+}
+
 export type KerfCut = { y: number; h: number }
+export type SliceBand = { y: number; h: number }
 
 /** Kerf slots along glue-up 1, leftover split on both ends. */
 export function glueUpKerfCuts(board: Board): KerfCut[] {
@@ -65,6 +74,23 @@ export function glueUpKerfCuts(board: Board): KerfCut[] {
     }
   }
   return cuts
+}
+
+/** Slice rectangles along glue-up 1 — outlines on the Cut stage. */
+export function glueUpSliceBands(board: Board): SliceBand[] {
+  if (board.grainMode !== 'end') return []
+  const { count } = computeSliceCount(board)
+  const block = stopBlock(board)
+  const kerf = board.settings.kerf
+  const extra = board.settings.extraLength
+  const bands: SliceBand[] = []
+  let y = extra / 2
+  for (let i = 0; i < count; i++) {
+    bands.push({ y, h: block })
+    y += block
+    if (i < count - 1) y += kerf
+  }
+  return bands
 }
 
 export function rowIndexFromStripId(stripId: string): number {

@@ -6,6 +6,8 @@ import { woodPreviewColor } from '../../domain/woods'
 import type { Board, Preset } from '../../domain/types'
 import { useBoardStore } from '../../state/boardStore'
 
+const APPROXIMATE = new Set(['tumbling-block', 'four-towers', 'chevron'])
+
 function presetThumbBoard(preset: Preset): Board {
   return {
     id: 'thumb',
@@ -54,7 +56,12 @@ export function PresetGallery() {
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-medium">Presets</h2>
+      <div>
+        <h2 className="text-sm font-medium">Showpieces</h2>
+        <p className="text-[11px] leading-snug text-muted-foreground">
+          Click a named pattern to load it.
+        </p>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         {PRESETS.map((p) => (
           <button
@@ -75,7 +82,17 @@ export function PresetGallery() {
             <span className="relative">
               <FinishedThumb preset={p} />
             </span>
-            <span className="relative mt-2 block truncate text-xs font-medium">{p.name}</span>
+            <span className="relative mt-1.5 flex items-center gap-1">
+              <span className="truncate text-xs font-medium">{p.name}</span>
+              {APPROXIMATE.has(p.id) && (
+                <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+                  approx
+                </span>
+              )}
+            </span>
+            <span className="relative mt-0.5 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+              {p.description}
+            </span>
           </button>
         ))}
       </div>

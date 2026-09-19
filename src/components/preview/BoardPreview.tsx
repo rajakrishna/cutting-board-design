@@ -101,10 +101,10 @@ export function BoardPreview() {
           size="sm"
         >
           <ToggleGroupItem value="finished" className="text-xs">
-            Done
+            Finished
           </ToggleGroupItem>
           <ToggleGroupItem value="glue1" className="text-xs">
-            Glue
+            Glue-up
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -118,11 +118,11 @@ export function BoardPreview() {
           variant="outline"
           size="sm"
         >
-          <ToggleGroupItem value="end" className="text-xs capitalize">
-            end
+          <ToggleGroupItem value="end" className="text-xs">
+            End grain
           </ToggleGroupItem>
-          <ToggleGroupItem value="long" className="text-xs capitalize">
-            long
+          <ToggleGroupItem value="long" className="text-xs">
+            Edge grain
           </ToggleGroupItem>
         </ToggleGroup>
 

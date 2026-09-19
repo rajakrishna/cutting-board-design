@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { useBoardStore } from '../../state/boardStore'
-import { PRESETS } from '../../data/templates'
 import { notify } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
@@ -46,7 +45,6 @@ export function ShareBar() {
   const randomize = useBoardStore((s) => s.randomize)
   const undo = useBoardStore((s) => s.undo)
   const undoBoard = useBoardStore((s) => s.undoBoard)
-  const loadPreset = useBoardStore((s) => s.loadPreset)
   const savedBoards = useBoardStore((s) => s.savedBoards)
   const loadSaved = useBoardStore((s) => s.loadSaved)
 
@@ -185,23 +183,6 @@ export function ShareBar() {
         className="hidden"
         onChange={handleImportFile}
       />
-
-      <Select
-        onValueChange={(v) => {
-          if (v) loadPreset(v)
-        }}
-      >
-        <SelectTrigger size="sm" className="w-32.5">
-          <SelectValue placeholder="Presets…" />
-        </SelectTrigger>
-        <SelectContent>
-          {PRESETS.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              {p.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       {savedBoards.length > 0 && (
         <Select

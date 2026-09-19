@@ -38,6 +38,7 @@ type BoardStore = {
   buyListOpen: boolean;
 
   setBoard: (board: Board) => void;
+  setBoardName: (name: string) => void;
   patchSettings: (partial: Partial<Board['settings']>) => void;
   setGrainMode: (mode: GrainMode) => void;
   setStrips: (strips: Strip[]) => void;
@@ -129,6 +130,14 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   buyListOpen: false,
 
   setBoard: (board) => {
+    persist(board);
+    set({ board });
+  },
+
+  setBoardName: (name) => {
+    const next = name.trim();
+    if (!next || next === get().board.name) return;
+    const board = { ...get().board, name: next };
     persist(board);
     set({ board });
   },

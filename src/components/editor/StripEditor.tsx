@@ -1,7 +1,7 @@
 import { useBoardStore } from '../../state/boardStore'
-import { WOODS } from '../../domain/woods'
+import { WOODS, getWood } from '../../domain/woods'
+import { NumberStepper } from './NumberStepper'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -56,13 +56,19 @@ export function StripEditor() {
                 {i + 1}
               </span>
 
+              <span
+                className="size-3.5 shrink-0 rounded-sm border border-border"
+                style={{ backgroundColor: getWood(s.woodId)?.color ?? '#94a3b8' }}
+                aria-hidden
+              />
+
               <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
                 <Select
                   value={s.woodId}
                   onValueChange={(woodId) => updateStrip(s.id, { woodId })}
                 >
                   <SelectTrigger size="sm" className="w-full px-2 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Wood" />
                   </SelectTrigger>
                   <SelectContent>
                     {['domestic', 'exotic', 'accent'].map((group) => {
@@ -72,14 +78,13 @@ export function StripEditor() {
                         <SelectGroup key={group}>
                           <SelectLabel className="capitalize">{group}</SelectLabel>
                           {items.map((w) => (
-                            <SelectItem key={w.id} value={w.id}>
-                              <span className="flex items-center gap-2">
-                                <span
-                                  className="size-3 rounded-sm"
-                                  style={{ backgroundColor: w.color }}
-                                />
-                                {w.name}
-                              </span>
+                            <SelectItem key={w.id} value={w.id} textValue={w.name}>
+                              <span
+                                className="inline-block size-3.5 shrink-0 rounded-sm border border-border"
+                                style={{ backgroundColor: w.color }}
+                                aria-hidden
+                              />
+                              {w.name}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -89,22 +94,16 @@ export function StripEditor() {
                 </Select>
               </div>
 
-              <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                <Input
-                  type="number"
+              <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <NumberStepper
                   value={s.width}
-                  onChange={(e) => {
-                    const v = Number(e.target.value)
-                    if (!Number.isNaN(v) && v >= 0.25 && v <= 8) {
-                      updateStrip(s.id, { width: v })
-                    }
-                  }}
+                  onChange={(width) => updateStrip(s.id, { width })}
                   step={0.125}
                   min={0.25}
                   max={8}
-                  className="h-8 w-20 px-1 text-center text-xs tabular-nums"
+                  unit="inches"
+                  label={`strip ${i + 1} width`}
                 />
-                <span className="text-xs text-muted-foreground">"</span>
               </div>
 
               <Button

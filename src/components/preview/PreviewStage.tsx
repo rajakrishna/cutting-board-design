@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useEffect, useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -6,10 +6,10 @@ import * as THREE from 'three';
 import { getWood } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
 import { DimensionLabels } from './DimensionLabels';
-import type { BoardGeometry } from '../../domain/types';
+import type { BoardGeometry, GrainMode } from '../../domain/types';
+import { DEFAULT_ZOOM, frameBoardCamera, type CameraPose } from './cameraFraming';
 
-/** Zoom the preview opens at, and returns to on Fit. */
-export const DEFAULT_ZOOM = 0.7;
+export { DEFAULT_ZOOM };
 
 export type Preview3DRef = {
   resetCamera: () => void;
@@ -20,6 +20,7 @@ export type Preview3DRef = {
 type Props = {
   geometry: BoardGeometry;
   face: 'finished' | 'glue1';
+  grainMode: GrainMode;
   showDimensions: boolean;
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
@@ -27,13 +28,33 @@ type Props = {
   onZoomChange?: (zoom: number) => void;
 };
 
+function faceSpans(geometry: BoardGeometry, face: Props['face']) {
+  const polys = face === 'finished' ? geometry.finished : geometry.glueUp1;
+  const spanX = Math.max(...polys.map((p) => p.x + p.w), 1);
+  const spanZ = Math.max(...polys.map((p) => p.y + p.h), 1);
+  return { spanX, spanZ };
+}
+
+function applyCameraPose(
+  camera: THREE.Camera,
+  controls: OrbitControlsImpl | null,
+  pose: CameraPose,
+) {
+  camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+  if (controls) {
+    controls.target.set(pose.target[0], pose.target[1], pose.target[2]);
+    controls.update();
+    controls.saveState();
+  }
+}
+
 function BoardMesh({
   geometry,
   face,
   selectedStripId,
   onSelect,
   thickness,
-}: Omit<Props, 'showDimensions'>) {
+}: Omit<Props, 'showDimensions' | 'grainMode' | 'onZoomChange'>) {
   const polys = face === 'finished' ? geometry.finished : geometry.glueUp1;
   const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
   const maxY = Math.max(...polys.map((p) => p.y + p.h), 1);
@@ -76,74 +97,85 @@ function BoardMesh({
 
 function CameraController({
   controlsRef,
-  defaultDistance,
+  pose,
+  grainMode,
   onZoomChange,
 }: {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
-  defaultDistance: number;
+  pose: CameraPose;
+  grainMode: GrainMode;
   onZoomChange?: (zoom: number) => void;
 }) {
   const { camera } = useThree();
+  const poseRef = useRef(pose);
+  poseRef.current = pose;
+
+  useEffect(() => {
+    applyCameraPose(camera, controlsRef.current, poseRef.current);
+  }, [camera, controlsRef, grainMode]);
 
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls || !onZoomChange) return;
 
     const handleChange = () => {
-      const dist = camera.position.length();
-      const zoom = defaultDistance / dist;
+      const dist = camera.position.distanceTo(controls.target);
+      const zoom = pose.distance / dist;
       onZoomChange(Math.max(0.1, Math.min(4, zoom)));
     };
 
     controls.addEventListener('change', handleChange);
     return () => controls.removeEventListener('change', handleChange);
-  }, [camera, controlsRef, defaultDistance, onZoomChange]);
+  }, [camera, controlsRef, pose.distance, onZoomChange]);
 
   return null;
 }
 
 export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(props, ref) {
-  const { geometry, showDimensions, onZoomChange } = props;
-  const maxDim = Math.max(geometry.overall.length, geometry.overall.width, 10);
+  const { geometry, face, grainMode, showDimensions, onZoomChange } = props;
   const { length, width, thickness } = geometry.overall;
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const defaultDistance = maxDim * Math.sqrt(0.9 * 0.9 + 0.7 * 0.7 + 0.9 * 0.9);
+  const { spanX, spanZ } = faceSpans(geometry, face);
+  const pose = useMemo(
+    () =>
+      frameBoardCamera({
+        spanX,
+        spanZ,
+        thickness: props.thickness,
+        grainMode,
+      }),
+    [spanX, spanZ, props.thickness, grainMode],
+  );
 
   useImperativeHandle(ref, () => ({
     resetCamera: () => {
       const controls = controlsRef.current;
-      if (controls) {
-        controls.reset();
-      }
+      if (!controls) return;
+      applyCameraPose(controls.object, controls, pose);
     },
     setZoom: (level: number) => {
       const controls = controlsRef.current;
-      if (controls) {
-        const targetDist = defaultDistance / level;
-        const currentPos = controls.object.position.clone().normalize();
-        controls.object.position.copy(currentPos.multiplyScalar(targetDist));
-        controls.update();
-      }
+      if (!controls) return;
+      const targetDist = pose.distance / level;
+      const offset = controls.object.position.clone().sub(controls.target);
+      if (offset.lengthSq() === 0) return;
+      offset.setLength(targetDist);
+      controls.object.position.copy(controls.target).add(offset);
+      controls.update();
     },
     getZoom: () => {
       const controls = controlsRef.current;
-      if (controls) {
-        const dist = controls.object.position.length();
-        return defaultDistance / dist;
-      }
-      return 1;
+      if (!controls) return 1;
+      const dist = controls.object.position.distanceTo(controls.target);
+      return pose.distance / dist;
     },
-  }), [defaultDistance]);
+  }), [pose]);
 
   return (
     <div className="relative h-full w-full bg-paper">
       <Canvas
         camera={{
-          position: [
-            (maxDim * 0.9) / DEFAULT_ZOOM,
-            (maxDim * 0.7) / DEFAULT_ZOOM,
-            (maxDim * 0.9) / DEFAULT_ZOOM,
-          ],
+          position: pose.position,
           fov: 40,
         }}
         onPointerMissed={() => props.onSelect(null)}
@@ -160,7 +192,8 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
         <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.1} />
         <CameraController
           controlsRef={controlsRef}
-          defaultDistance={defaultDistance}
+          pose={pose}
+          grainMode={grainMode}
           onZoomChange={onZoomChange}
         />
       </Canvas>

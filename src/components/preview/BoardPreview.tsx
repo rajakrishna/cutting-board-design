@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Preview2D } from './Preview2D'
 import { Preview3D, DEFAULT_ZOOM, type Preview3DRef } from './PreviewStage'
 import { CanvasToolbar } from './CanvasToolbar'
@@ -6,6 +6,7 @@ import { useBoardStore, useDerived } from '../../state/boardStore'
 import { formatInches } from '../../domain/cutList'
 import { SIZE_CHIPS } from '../../domain/defaults'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import {
@@ -68,11 +69,16 @@ export function BoardPreview() {
     setZoom(newZoom)
   }, [])
 
+  useEffect(() => {
+    setZoom(DEFAULT_ZOOM)
+  }, [board.grainMode])
+
+  const endGrain = board.grainMode === 'end'
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Top toolbar with all board controls */}
-      <div className="no-print flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
-        {/* View mode */}
+      <div className="no-print flex flex-col gap-1.5 border-b border-border bg-card px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
           type="single"
           value={previewMode}
@@ -90,25 +96,30 @@ export function BoardPreview() {
           </ToggleGroupItem>
         </ToggleGroup>
 
-        {/* Face mode */}
-        <ToggleGroup
-          type="single"
-          value={faceMode}
-          onValueChange={(v) => {
-            if (v === 'finished' || v === 'glue1') setFaceMode(v)
-          }}
-          variant="outline"
-          size="sm"
-        >
-          <ToggleGroupItem value="finished" className="text-xs">
-            Done
-          </ToggleGroupItem>
-          <ToggleGroupItem value="glue1" className="text-xs">
-            Glue
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex flex-col gap-0.5">
+          <ToggleGroup
+            type="single"
+            value={faceMode}
+            onValueChange={(v) => {
+              if (v === 'finished' || v === 'glue1') setFaceMode(v)
+            }}
+            variant="outline"
+            size="sm"
+          >
+            <ToggleGroupItem value="finished" className="text-xs">
+              {endGrain ? 'Finished (end grain)' : 'Finished (edge)'}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="glue1" className="text-xs">
+              {endGrain ? 'Glue-up (edge)' : 'Glue-up'}
+            </ToggleGroupItem>
+          </ToggleGroup>
+          {endGrain && (
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              Crosscut → rotate 90° → re-glue
+            </p>
+          )}
+        </div>
 
-        {/* Grain mode */}
         <ToggleGroup
           type="single"
           value={board.grainMode}
@@ -186,7 +197,6 @@ export function BoardPreview() {
           </span>
         )}
 
-        {/* Show dimensions toggle - pushed right */}
         <label className="ml-auto flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
           <Checkbox
             checked={showDimensions}
@@ -195,6 +205,30 @@ export function BoardPreview() {
           Dims
         </label>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Pattern
+        </span>
+        <Toggle
+          variant="outline"
+          size="lg"
+          pressed={board.settings.flipAlternate}
+          onPressedChange={(v) => patchSettings({ flipAlternate: v })}
+          aria-label="Flip alternate slices"
+        >
+          Flip alternate
+        </Toggle>
+        <Toggle
+          variant="outline"
+          size="lg"
+          pressed={board.settings.rotateAlternate}
+          onPressedChange={(v) => patchSettings({ rotateAlternate: v })}
+          aria-label="Rotate alternate slices"
+        >
+          Rotate alternate
+        </Toggle>
+      </div>
+      </div>
       <div className="relative min-h-0 flex-1 bg-preview-canvas">
         {previewMode === '3d' ? (
           <>
@@ -202,6 +236,7 @@ export function BoardPreview() {
               ref={preview3DRef}
               geometry={geometry}
               face={faceMode}
+              grainMode={board.grainMode}
               showDimensions={showDimensions}
               selectedStripId={selectedStripId}
               onSelect={selectStrip}

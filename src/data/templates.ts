@@ -30,6 +30,34 @@ function baseSettings(overrides: Partial<typeof DEFAULT_SETTINGS> = {}) {
 
 export const PRESETS: Preset[] = [
   {
+    id: 'cube-illusion',
+    name: 'Cube Illusion',
+    description: 'Three-tone isometric cubes — maple, walnut, cherry. Shift each row one strip.',
+    cutCard: {
+      ripAngle: 0,
+      miterAngle: 0,
+      notes: 'Equal-width ABC repeat. Crosscut at strip width. Cycle-shift each slice by one.',
+    },
+    board: {
+      grainMode: 'end',
+      strips: repeat(
+        [
+          ['hard-maple', 4 / 3],
+          ['walnut', 4 / 3],
+          ['cherry', 4 / 3],
+        ],
+        3,
+      ),
+      settings: baseSettings({
+        finishedWidth: 12,
+        panelThickness: 4 / 3,
+        cycleShift: 1,
+        flipAlternate: false,
+      }),
+      sliceOverrides: [],
+    },
+  },
+  {
     id: 'stripes',
     name: 'Classic Stripes',
     description: 'Alternating maple and walnut. Square rips.',
@@ -114,34 +142,6 @@ export const PRESETS: Preset[] = [
         finishedWidth: 10,
         flipAlternate: true,
         rotateAlternate: true,
-      }),
-      sliceOverrides: [],
-    },
-  },
-  {
-    id: 'cube-illusion',
-    name: 'Cube Illusion',
-    description: 'Three-tone isometric cubes — maple, walnut, cherry. Shift each row one strip.',
-    cutCard: {
-      ripAngle: 0,
-      miterAngle: 0,
-      notes: 'Equal-width ABC repeat. Crosscut at strip width. Cycle-shift each slice by one.',
-    },
-    board: {
-      grainMode: 'end',
-      strips: repeat(
-        [
-          ['hard-maple', 4 / 3],
-          ['walnut', 4 / 3],
-          ['cherry', 4 / 3],
-        ],
-        3,
-      ),
-      settings: baseSettings({
-        finishedWidth: 12,
-        panelThickness: 4 / 3,
-        cycleShift: 1,
-        flipAlternate: false,
       }),
       sliceOverrides: [],
     },

@@ -1,4 +1,4 @@
-import { getWood } from '../../domain/woods';
+import { woodPreviewColor } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
 import { rowIndexFromStripId, type KerfCut } from '../../domain/buildStages';
 import type { BoardGeometry, RectPoly } from '../../domain/types';
@@ -8,6 +8,7 @@ type Props = {
   face: 'finished' | 'glue1';
   sliceGap?: number;
   kerfCuts?: KerfCut[];
+  oiled?: boolean;
   showDimensions: boolean;
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
@@ -26,6 +27,7 @@ export function Preview2D({
   face,
   sliceGap = 0,
   kerfCuts = [],
+  oiled = false,
   showDimensions,
   selectedStripId,
   onSelect,
@@ -48,7 +50,6 @@ export function Preview2D({
       <rect x={0} y={0} width={w} height={h} fill="var(--paper)" />
       <g transform={`translate(${pad}, ${pad})`}>
         {polys.map((p) => {
-          const wood = getWood(p.woodId);
           const selected = selectedStripId != null && p.stripId.startsWith(selectedStripId);
           return (
             <rect
@@ -57,7 +58,7 @@ export function Preview2D({
               y={p.y * scale}
               width={Math.max(1, p.w * scale)}
               height={Math.max(1, p.h * scale)}
-              fill={wood?.color ?? '#ccc'}
+              fill={woodPreviewColor(p.woodId, oiled)}
               stroke={selected ? 'var(--accent)' : 'var(--line)'}
               strokeWidth={selected ? 2 : 0.5}
               className="cursor-pointer"

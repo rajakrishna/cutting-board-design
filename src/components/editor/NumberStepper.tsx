@@ -8,6 +8,8 @@ type Props = {
   min?: number
   max?: number
   unit?: 'inches' | 'degrees'
+  label?: string
+  className?: string
 }
 
 function formatValue(value: number, unit?: string): string {
@@ -27,6 +29,8 @@ export function NumberStepper({
   min = 0,
   max = 100,
   unit,
+  label,
+  className,
 }: Props) {
   const decrement = () => {
     onChange(Math.max(min, Math.round((value - step) * 1000) / 1000))
@@ -36,12 +40,13 @@ export function NumberStepper({
   }
 
   return (
-    <div className="inline-flex items-center rounded-md border border-input bg-background text-xs">
+    <div className={cn('inline-flex items-center rounded-md border border-input bg-background text-xs', className)}>
       <button
         type="button"
         className="flex h-6 w-6 items-center justify-center rounded-l-md border-r border-input hover:bg-accent disabled:opacity-50"
         onClick={decrement}
         disabled={value <= min}
+        aria-label={label ? `Decrease ${label}` : 'Decrease'}
       >
         <Minus className="size-3" />
       </button>
@@ -58,6 +63,7 @@ export function NumberStepper({
         className="flex h-6 w-6 items-center justify-center rounded-r-md border-l border-input hover:bg-accent disabled:opacity-50"
         onClick={increment}
         disabled={value >= max}
+        aria-label={label ? `Increase ${label}` : 'Increase'}
       >
         <Plus className="size-3" />
       </button>

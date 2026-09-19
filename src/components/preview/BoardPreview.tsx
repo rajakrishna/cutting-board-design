@@ -145,11 +145,11 @@ export function BoardPreview() {
           variant="outline"
           size="sm"
         >
-          <ToggleGroupItem value="end" className="text-xs capitalize">
-            end
+          <ToggleGroupItem value="end" className="text-xs">
+            End grain
           </ToggleGroupItem>
-          <ToggleGroupItem value="long" className="text-xs capitalize">
-            long
+          <ToggleGroupItem value="long" className="text-xs">
+            Edge grain
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -164,7 +164,7 @@ export function BoardPreview() {
           }}
         >
           <SelectTrigger size="sm" className="w-28 text-xs">
-            <SelectValue placeholder="Sizes" />
+            <SelectValue placeholder={sizeId ? 'Sizes' : 'Custom'} />
           </SelectTrigger>
           <SelectContent>
             {SIZE_CHIPS.map((c) => (
@@ -221,8 +221,12 @@ export function BoardPreview() {
           Dims
         </label>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        {endGrain && <BuildStageBar stage={buildStage} onStage={setBuildStage} />}
+      {endGrain && (
+        <div className="min-w-0">
+          <BuildStageBar stage={buildStage} onStage={setBuildStage} />
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Pattern
         </span>
@@ -257,6 +261,7 @@ export function BoardPreview() {
               buildStage={endGrain ? buildStage : 'final'}
               sliceGap={sliceGap}
               kerfCuts={kerfCuts}
+              oiled={endGrain && buildStage === 'final'}
               showDimensions={showDimensions}
               selectedStripId={selectedStripId}
               onSelect={selectStrip}
@@ -277,6 +282,7 @@ export function BoardPreview() {
             face={stageFace}
             sliceGap={sliceGap}
             kerfCuts={kerfCuts}
+            oiled={endGrain && buildStage === 'final'}
             showDimensions={showDimensions}
             selectedStripId={selectedStripId}
             onSelect={selectStrip}

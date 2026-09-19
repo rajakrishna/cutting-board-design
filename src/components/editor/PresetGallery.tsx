@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import { PRESETS } from '../../data/templates'
 import { buildFinishedPolygons } from '../../domain/geometry'
-import { getWood } from '../../domain/woods'
+import { woodPreviewColor } from '../../domain/woods'
 import type { Board, Preset } from '../../domain/types'
 import { useBoardStore } from '../../state/boardStore'
 
@@ -35,7 +35,7 @@ function FinishedThumb({ preset }: { preset: Preset }) {
           y={p.y}
           width={p.w}
           height={p.h}
-          fill={getWood(p.woodId)?.color ?? '#94a3b8'}
+          fill={woodPreviewColor(p.woodId, true)}
         />
       ))}
     </svg>

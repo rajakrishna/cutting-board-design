@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
-import { getWood } from '../../domain/woods';
+import { woodPreviewColor } from '../../domain/woods';
 import { formatInches } from '../../domain/cutList';
 import { DimensionLabels } from './DimensionLabels';
 import type { BuildStage } from '../../domain/buildStages';
@@ -26,6 +26,7 @@ type Props = {
   buildStage: BuildStage;
   sliceGap: number;
   kerfCuts: KerfCut[];
+  oiled: boolean;
   showDimensions: boolean;
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
@@ -70,12 +71,14 @@ function BoardMesh({
   onSelect,
   thickness,
   kerfCuts,
+  oiled,
 }: {
   polys: RectPoly[];
   selectedStripId: string | null;
   onSelect: (id: string | null) => void;
   thickness: number;
   kerfCuts: KerfCut[];
+  oiled: boolean;
 }) {
   const maxX = Math.max(...polys.map((p) => p.x + p.w), 1);
   const maxY = Math.max(...polys.map((p) => p.y + p.h), 1);
@@ -84,7 +87,6 @@ function BoardMesh({
   return (
     <group position={[-maxX / 2, 0, -maxY / 2]}>
       {polys.map((p) => {
-        const wood = getWood(p.woodId);
         const selected = selectedStripId != null && p.stripId.startsWith(selectedStripId);
         const baseId = p.stripId.split('-r')[0] ?? p.stripId;
         return (
@@ -98,7 +100,7 @@ function BoardMesh({
             >
               <boxGeometry args={[Math.max(0.05, p.w), t, Math.max(0.05, p.h)]} />
               <meshStandardMaterial
-                color={wood?.color ?? '#ccc'}
+                color={woodPreviewColor(p.woodId, oiled)}
                 emissive={selected ? '#4a90d9' : '#000000'}
                 emissiveIntensity={selected ? 0.4 : 0}
               />
@@ -168,6 +170,7 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
     buildStage,
     sliceGap,
     kerfCuts,
+    oiled,
     showDimensions,
     onZoomChange,
   } = props;
@@ -232,6 +235,7 @@ export const Preview3D = forwardRef<Preview3DRef, Props>(function Preview3D(prop
           onSelect={props.onSelect}
           thickness={meshThickness}
           kerfCuts={kerfCuts}
+          oiled={oiled}
         />
         <DimensionLabels
           length={length}
